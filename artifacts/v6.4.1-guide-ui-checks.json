@@ -232,7 +232,7 @@
     "390x844 merged finale"
   ],
   "integratedRemoteBaseline": "deb90c8",
-  "sourceFingerprint": "e7a57930ca88fae62ee2dff8d76f254c7e3e805ce92a73e808ac37700b4aa7b3",
+  "sourceFingerprint": "82aa1dadc2320618a621f45283ce1b997ff4e673c745e44d3369e1a812da73d1",
   "review": "docs/v6/GUIDANCE_REVIEW.md",
   "buildAssets": [
     "assets/index-A0-agXLk.js",
