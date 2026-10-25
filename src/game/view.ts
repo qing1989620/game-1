@@ -7,8 +7,9 @@ import { WeatherRig } from './weather';
 import type { Weather } from './forge-domain';
 import { ThreadWorld } from './thread-world';
 import { SnowWorld } from './snow-world';
+import { MirrorWorld } from './mirror-world';
 
-export type ViewMode = 'menu' | 'follow' | 'order' | 'rail' | 'recovery' | 'ride' | 'result' | 'forge-arrival' | 'forge-power' | 'forge-alu' | 'forge-rise' | 'forge-result' | 'thread-arrival' | 'thread-device' | 'thread-audit' | 'thread-ride' | 'thread-result' | 'snow-arrival' | 'snow-device' | 'snow-audit' | 'snow-final' | 'snow-result';
+export type ViewMode = 'menu' | 'follow' | 'order' | 'rail' | 'recovery' | 'ride' | 'result' | 'forge-arrival' | 'forge-power' | 'forge-alu' | 'forge-rise' | 'forge-result' | 'thread-arrival' | 'thread-device' | 'thread-audit' | 'thread-ride' | 'thread-result' | 'snow-arrival' | 'snow-device' | 'snow-audit' | 'snow-final' | 'snow-result' | 'mirror-device' | 'mirror-result';
 export class CityView {
   renderer: T.WebGLRenderer;
   camera = new T.PerspectiveCamera(62,1,.15,1300);
@@ -17,7 +18,8 @@ export class CityView {
   forge: PulseWorld | null = null;
   thread: ThreadWorld | null = null;
   snow: SnowWorld | null = null;
-  city: 'dock' | 'forge' | 'thread' | 'snow' = 'dock';
+  mirror: MirrorWorld | null = null;
+  city: 'dock' | 'forge' | 'thread' | 'snow' | 'mirror' = 'dock';
   weather: Weather = 'rain';
   mode: ViewMode = 'menu';
   yaw = 0;
@@ -56,15 +58,16 @@ export class CityView {
     this.settings=settings;
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,settings.quality==='low'?1:1.65));
     this.world.setQuality(settings.quality==='low');
-    this.dockWeather.setQuality(settings.quality==='low');this.forge?.setQuality(settings.quality==='low');this.thread?.setQuality(settings.quality==='low');this.snow?.setQuality(settings.quality==='low');
+    this.dockWeather.setQuality(settings.quality==='low');this.forge?.setQuality(settings.quality==='low');this.thread?.setQuality(settings.quality==='low');this.snow?.setQuality(settings.quality==='low');this.mirror?.setQuality(settings.quality==='low');
   }
-  switchCity(city:'dock'|'forge'|'thread'|'snow'):void {
+  switchCity(city:'dock'|'forge'|'thread'|'snow'|'mirror'):void {
     this.city=city;
     if(city==='forge'&&!this.forge){this.forge=new PulseWorld();this.forge.setQuality(this.settings.quality==='low');}
     if(city==='thread'&&!this.thread){this.thread=new ThreadWorld();this.thread.setQuality(this.settings.quality==='low');}
     if(city==='snow'&&!this.snow){this.snow=new SnowWorld();this.snow.setQuality(this.settings.quality==='low');}
+    if(city==='mirror'&&!this.mirror){this.mirror=new MirrorWorld();this.mirror.setQuality(this.settings.quality==='low');}
     this.warmup=true;
-    this.renderer.domElement.setAttribute('aria-label',`${city==='snow'?'雨线城白噪雪原':city==='thread'?'千线程':city==='forge'?'脉冲炉':'指针港'}三维场景；WASD 移动，右键看四周，Q 扫描，E 互动${city==='snow'?'，F 稳身抗风':''}`);
+    this.renderer.domElement.setAttribute('aria-label',`${city==='mirror'?'镜库城':city==='snow'?'雨线城白噪雪原':city==='thread'?'千线程':city==='forge'?'脉冲炉':'指针港'}三维场景；WASD 移动，右键看四周，Q 扫描，E 互动${city==='snow'?'，F 稳身抗风':''}`);
   }
   resize(): void {
     this.width=window.innerWidth;this.height=window.innerHeight;
@@ -92,7 +95,7 @@ export class CityView {
   }
   render(dt: number,hero: V3,speed: number,paused: boolean): void {
     this.elapsed+=dt;
-    const active=this.city==='snow'&&this.snow?this.snow:this.city==='thread'&&this.thread?this.thread:this.city==='forge'&&this.forge?this.forge:this.world;
+    const active=this.city==='mirror'&&this.mirror?this.mirror:this.city==='snow'&&this.snow?this.snow:this.city==='thread'&&this.thread?this.thread:this.city==='forge'&&this.forge?this.forge:this.world;
     if(this.city==='thread'&&this.thread)this.thread.weather.weather=this.weather;
     if(this.city==='forge'&&this.forge)this.forge.weather.weather=this.weather;
     active.update(paused?0:dt,hero,paused?0:speed,paused||this.mode==='order'||this.mode==='rail',this.settings.reducedMotion);
@@ -101,6 +104,10 @@ export class CityView {
     if(this.mode==='menu') {
       const drift=this.settings.reducedMotion?0:Math.sin(this.elapsed*.07)*1.8;
       this.desired.set(6+drift,27,55);this.target.set(14,26,-70);
+    } else if(this.mode==='mirror-device'&&this.mirror) {
+      const p=this.mirror.focus;this.desired.set(p.x+22,p.y+18,p.z+25);this.target.set(p.x,p.y+4,p.z-3);
+    } else if(this.mode==='mirror-result') {
+      this.desired.set(28,30,-120);this.target.set(0,12,-151);
     } else if(this.mode==='snow-arrival') {
       this.desired.set(-141,52,133);this.target.set(-40,8,3);
     } else if(this.mode==='snow-device'&&this.snow) {

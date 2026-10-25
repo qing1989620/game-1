@@ -8,6 +8,7 @@ const manifest=JSON.parse(read('package.json'));
 const profiles={
   '6.2.0':{receipt:'artifacts/v6.2-ui-checks.json',review:'docs/v6/THREAD_REVIEW.md',minimum:20},
   '6.3.0':{receipt:'artifacts/v6.3-ui-checks.json',review:'docs/v6/SNOW_REVIEW.md',minimum:35},
+  '6.4.0':{receipt:'artifacts/v6.4-ui-checks.json',review:'docs/v6/MIRROR_REVIEW.md',minimum:25},
 };
 const profile=profiles[manifest.version];
 if(!profile)throw new Error(`No reviewed release profile for ${manifest.version}`);

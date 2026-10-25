@@ -1,0 +1,37 @@
+#mirror-layer{position:absolute;inset:0;pointer-events:none;color:#eaf6f6;font-family:system-ui,"Microsoft YaHei",sans-serif;z-index:18}
+#mirror-layer [hidden]{display:none!important}
+#mirror-layer button,#mirror-layer select{font:inherit;cursor:pointer}
+#mirror-tools{position:absolute;right:1.2rem;top:5.5rem;display:flex;gap:.6rem;pointer-events:auto}
+#mirror-layer button{background:#172a3be8;border:1px solid #78d9dd88;color:#eaf6f6;border-radius:6px;padding:.7rem 1rem}
+#mirror-layer button:hover,#mirror-layer button:focus-visible{border-color:#c2fffb;background:#27516a}
+#mirror-layer kbd{font:600 .75em monospace;border:1px solid #b8d9d988;border-radius:3px;padding:.1em .3em}
+#mirror-dialog{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,90vw);padding:2rem;background:#122136f5;border:1px solid #94dce4;box-shadow:0 20px 70px #000a;pointer-events:auto;line-height:1.8}
+#mirror-dialog span,#mirror-editor small,#mirror-journal small,#mirror-result small{color:#8de6e5;letter-spacing:.16em;font:600 .75rem monospace}
+#mirror-dialog button{margin-top:1rem}
+#mirror-editor,#mirror-journal{position:absolute;left:1.2rem;top:5.2rem;bottom:1.2rem;width:min(500px,calc(100vw - 2.4rem));display:flex;flex-direction:column;pointer-events:auto;background:#111e31f4;border:1px solid #83bdcb;box-shadow:0 24px 60px #0009;border-radius:10px;overflow:hidden}
+#mirror-editor header,#mirror-journal header{display:flex;justify-content:space-between;align-items:start;padding:1.1rem 1.3rem;border-bottom:1px solid #7fbac455}
+#mirror-editor h2,#mirror-journal h2{margin:.4rem 0 0;font-size:1.45rem}
+#mirror-close,#mirror-journal-close{font-size:1.4rem!important;line-height:1;padding:.2rem .55rem!important}
+.mirror-scroll{overflow:auto;flex:1;padding:1.2rem 1.3rem;line-height:1.6}
+#mirror-description{color:#c8dce2;margin:0 0 1.2rem}
+#mirror-controls{display:grid;gap:1rem;padding:1rem;background:#193149;border-left:3px solid #7ee4db}
+#mirror-controls label{display:grid;gap:.5rem}
+#mirror-controls select,#mirror-scenario{background:#0b1c30;color:#eaf6f6;border:1px solid #93ccd2;border-radius:4px;padding:.6rem}
+#mirror-controls .mirror-check{display:flex;align-items:center;gap:.7rem;min-height:44px}
+#mirror-controls input{accent-color:#83dfd9;width:20px;height:20px}
+#mirror-editor footer,#mirror-journal footer{padding:1rem 1.3rem;display:flex;gap:.6rem;border-top:1px solid #7fbac455}
+#mirror-verify{background:#73d9cf!important;color:#102232!important;font-weight:750!important;flex:1}
+#mirror-report{margin-top:1.2rem;padding:1rem;background:#24344a;border:1px solid #8bbec4}
+#mirror-report strong{color:#9ee6d4}#mirror-report ul{padding-left:1.2rem}
+#mirror-report li{margin:.35rem 0}
+#mirror-trace{margin-top:1rem}.mirror-trace-tools{display:flex;align-items:end;gap:.5rem;flex-wrap:wrap}.mirror-trace-tools label{display:grid;gap:.2rem;flex:1}
+#mirror-events{max-height:210px;overflow:auto;background:#091624;padding:1rem 1rem 1rem 2rem;font: .82rem/1.5 monospace}
+#mirror-events li{margin:.35rem 0}
+#mirror-journal{padding-bottom:0}#mirror-journal>p{padding:0 1.3rem}#mirror-journal-list{display:grid;gap:.6rem;overflow:auto;padding:1rem 1.3rem;flex:1}
+#mirror-journal-list button{text-align:left;min-height:54px}#mirror-journal footer button{width:100%}
+#mirror-result{position:absolute;inset:0;display:grid;place-items:center;background:#071421d9;pointer-events:auto;text-align:center}
+#mirror-result>div{display:grid;gap:.9rem;justify-items:center;width:min(580px,90vw);padding:2rem;background:#13263a;border:1px solid #83d9d7;box-shadow:0 0 80px #4c9baa55}
+#mirror-result strong{font-size:4rem;color:#bffcf1}#mirror-result em{font-size:1.3rem;font-style:normal}#mirror-result h2{margin:0;font-size:2rem}#mirror-result p{line-height:1.7;color:#c8dce2}
+body[data-city="mirror"] .objective{background:transparent;border:0;box-shadow:none;text-shadow:0 2px 10px #03111d}
+#app[data-city="mirror"][data-mode="patch"] #mirror-tools,#app[data-city="mirror"][data-mode="patch"] #toast{display:none!important}
+@media(max-width:700px){#mirror-tools{left:.6rem;right:.6rem;top:5.2rem;justify-content:space-between}#mirror-tools button{font-size:.78rem;padding:.55rem}body[data-city="mirror"] .objective{top:9.3rem}body[data-city="mirror"] #toast{top:18.5rem}#mirror-editor,#mirror-journal{left:.5rem;right:.5rem;top:auto;bottom:.5rem;width:auto;height:min(72vh,690px)}#mirror-dialog{padding:1.2rem}#mirror-result>div{padding:1rem}#mirror-result strong{font-size:2.7rem}}

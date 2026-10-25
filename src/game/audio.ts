@@ -8,7 +8,7 @@ export class CityAudio {
   private beat = 0;
   private next = 0;
   recovered = false;
-  city: 'dock'|'forge'|'thread'|'snow' = 'dock';
+  city: 'dock'|'forge'|'thread'|'snow'|'mirror' = 'dock';
   windSeverity=0;
   private windBuffer:AudioBuffer|null=null;
   unlock(): void {

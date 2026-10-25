@@ -12,7 +12,7 @@ const show = (id:string,on:boolean):void => { $(id).hidden=!on; };
 const text = (id:string,value:string):void => { $(id).textContent=value; };
 const distance = (a:V3,b:V3):number => Math.hypot(a.x-b.x,a.z-b.z);
 const phaseCases = {wind:'WF-02',route:'NET-01',reliable:'NET-02',congestion:'NET-03',clock:'NET-04'} as const;
-interface Hooks {campaign:()=>Campaign;view:CityView;motor:Motor;audio:CityAudio;block:(on:boolean)=>void;clearInput:()=>void;persist:()=>void;toast:(message:string,seconds?:number)=>void;returnThread:()=>void;openMap:()=>void;braceHeld:()=>boolean}
+interface Hooks {campaign:()=>Campaign;view:CityView;motor:Motor;audio:CityAudio;block:(on:boolean)=>void;clearInput:()=>void;persist:()=>void;toast:(message:string,seconds?:number)=>void;returnThread:()=>void;enterMirror:()=>void;openMap:()=>void;braceHeld:()=>boolean}
 type Cinema = {kind:'arrival'|'repair'|'audit'|'shuttle'|'ending';age:number;id?:SnowCase;target?:V3};
 export class SnowChapter {
   panel:SnowCase|null=null; journal=false; result=false; dialogue=-1; cinema:Cinema|null=null;
@@ -35,7 +35,7 @@ export class SnowChapter {
       <section id="snow-journal" hidden role="dialog" aria-modal="true" aria-labelledby="snow-journal-title"><header><div><span>EXPEDITION FIELD BOOK / 04</span><h2 id="snow-journal-title">白噪雪原 · 勘测册</h2></div><button id="snow-journal-close" class="snow-close" aria-label="关闭雪原勘测册">×</button></header><p id="snow-journal-description"></p><div class="snow-survey-layout"><div id="snow-survey-map"></div><div id="snow-journal-grid"></div></div><footer><button id="snow-main-track">回到当前主线 →</button><button id="snow-city-map">城际地图 ↗</button></footer></section>
       <section id="snow-dialog" hidden><span>KESTREL / 雪原信使</span><p id="snow-dialog-text"></p><button id="snow-dialog-next">继续 <kbd>E</kbd> →</button></section>
       <div id="snow-cinema" hidden><span id="snow-cinema-kicker"></span><div><h2 id="snow-cinema-title"></h2><p id="snow-cinema-text"></p><button id="snow-skip">跳过镜头 →</button></div></div>
-      <section id="snow-result" hidden><div class="snow-result-card"><span>CHAPTER 04 / PACKET RAIN</span><div class="snow-result-code">200 <small>OK</small></div><h2>穿过风雪，<br>你的声音已抵达。</h2><p id="snow-ending"></p><div id="snow-result-stats"></div><button id="snow-roam" class="snow-primary">留在雪原，看一场极光 ↗</button><div class="snow-result-links"><button id="snow-result-journal">打开勘测册 · 补齐故事 →</button><button id="snow-deliver-again">再次穿越风暴 ↗</button><button id="snow-return">乘雪地车返回千线程 →</button><button id="snow-replay">重新修复第四城 ↶</button></div><small class="snow-next">04 / 08 城市已开放<br>下一程 · 镜库城 / 规划中</small></div></section>`;
+      <section id="snow-result" hidden><div class="snow-result-card"><span>CHAPTER 04 / PACKET RAIN</span><div class="snow-result-code">200 <small>OK</small></div><h2>穿过风雪，<br>你的声音已抵达。</h2><p id="snow-ending"></p><div id="snow-result-stats"></div><button id="snow-next-city" class="snow-primary">下一站 · 镜库城 →</button><button id="snow-roam">留在雪原，看一场极光 ↗</button><div class="snow-result-links"><button id="snow-result-journal">打开勘测册 · 补齐故事 →</button><button id="snow-deliver-again">再次穿越风暴 ↗</button><button id="snow-return">乘雪地车返回千线程 →</button><button id="snow-replay">重新修复第四城 ↶</button></div><small class="snow-next">05 / 08 城市已开放<br>下一程 · 镜库城</small></div></section>`;
     $('app').append(root);
     $('snow-close').onclick=()=>this.closePanel();$('snow-preview').onclick=()=>this.preview();$('snow-verify').onclick=()=>this.verify();
     $('snow-step').onclick=()=>this.stepTrace();$('snow-auto').onclick=()=>{if(this.trace){this.trace.playing=!this.trace.playing;this.renderTrace();}};
@@ -47,6 +47,7 @@ export class SnowChapter {
     $('snow-city-map').onclick=()=>{this.closeJournal();this.h.openMap();};
     $('snow-dialog-next').onclick=()=>this.advanceDialogue();$('snow-skip').onclick=()=>this.finishCinema();
     $('snow-roam').onclick=()=>this.roam();$('snow-result-journal').onclick=()=>{this.roam();this.openJournal();};
+    $('snow-next-city').onclick=()=>this.h.enterMirror();
     $('snow-field-return').onclick=$('snow-return').onclick=()=>this.h.returnThread();
     $('snow-replay').onclick=()=>{this.h.campaign().data.snow=freshSnow();this.enter();};
     $('snow-deliver-again').onclick=()=>{if(this.state.phase!=='complete')return;this.roam();this.state.phase='expedition';this.state.delivery=0;this.state.weather='whiteout';this.tracked=null;this.sync();this.h.motor.warp(SNOW_AUDIT);this.h.persist();this.h.toast('五项修复保留。沿橙色旗标，再完成一次风暴投递。',7);};
@@ -55,6 +56,7 @@ export class SnowChapter {
   enter():void {
     this.hide();this.h.view.switchCity('snow');this.h.campaign().data.city='snow';this.h.audio.city='snow';show('snow-layer',true);
     const recoveredEnding=this.state.phase==='expedition'&&this.state.delivery===3&&this.authority.finish();
+    if(this.state.phase==='complete')this.h.campaign().data.snowClearance=structuredClone(this.state);
     this.sync();this.h.motor.warp(this.h.motor.checkpoint);this.h.motor.facing=Math.PI;this.h.view.yaw=0;this.h.view.pitch=.42;
     this.h.view.mode='follow';this.h.block(false);this.h.persist();this.updateHud();
     if(recoveredEnding){this.showResult();return;}
@@ -175,6 +177,7 @@ export class SnowChapter {
   private deliver():void {
     const next=this.state.delivery+1;if(!this.authority.deliver(next))return;
     const finished=next===3&&this.authority.finish();
+    if(finished)this.h.campaign().data.snowClearance=structuredClone(this.state);
     this.h.motor.warp(SNOW_POSTS[next-1]);this.sync();this.h.persist();this.h.audio.cue('success');
     if(finished){this.startCinema({kind:'ending',age:0});}
     else this.h.toast(`第 ${next} 次交接完成，已保存避风站检查点。${next===1?'下一段向左横穿峡谷。':'最后一段向北，极光观测站在风墙之后。'}`,8);this.updateHud();
