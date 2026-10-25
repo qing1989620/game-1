@@ -95,7 +95,8 @@ npm run preview -- --host 127.0.0.1 --port 5387
 - `src/game/view.ts`：Three.js WebGL2 渲染、镜头插值、防遮挡与世界坐标投影。PC、窄窗口、手机竖屏具有不同的调试构图。
 - `src/game/guidance.ts`、`guidance.css`：共用的透明下一步提示、阶段条与按钮描边；工作台内本关线索。只读取当前任务/证据与已呈现的互动，不修改权威状态；优先当前目标，避免旧设备抢引导。
 - `src/game/input.ts`：键盘、鼠标、摇杆和 Pointer Events。
-- `src/game/audio.ts`：用户手势解锁的原创 Web Audio 编曲与反馈，默认静音。
+- `src/game/audio.ts`：用户手势解锁的原创 Web Audio 编曲与反馈，默认静音。负责音频节点、限幅与风噪，只做调度。
+- `src/game/music.ts`：配乐的纯逻辑层。给定城市、是否已修复与当前八分音符序号，返回这一步该发哪些声部（和声垫、低音、旋律、脉冲），不含任何 AudioContext 操作，因此可单测。五城各有一套和弦进行与速度，修复前后换用明亮版；不加载任何音频文件。
 - `src/game/main.ts`：任务状态、工作台、反例报告、演出、设置、暂停与结算。
 - `src/game/coach.ts`：上下文引导的纯逻辑层，按当前城市与实时进度给出唯一下一步动作（按哪个键、做什么、为什么）。四城各自读自己的 phase 与证据集，不硬编码流程顺序。
 - `public/character-card.html`：主角概念设定卡，明确区分 AI 概念图与实机模型。
