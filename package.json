@@ -1,7 +1,7 @@
 {
   "name": "reflow-404",
   "private": true,
-  "version": "6.4.0",
+  "version": "6.4.1",
   "type": "module",
   "description": "RE:FLOW 404《断点之城》——五城探索：赤砂档案海、沙尘暴偏振显影、六个生产数据故障、四个遗留问题、跨城回归与灰度回滚。",
   "scripts": {

@@ -4,7 +4,7 @@
 
 截图日期：2026-10-24。首城原截图基线为 V6 `332406d`；`10-finish.jpg` 和首页封面已更新到 V6.1 两城版，显示新的城际入口。所有图片使用本地生产构建。工作台的滚动位置因讲解按钮不同。
 
-当前游戏为V6.4五城版。前四城图片保留各自验收时的历史版本；旧截图中2/8、3/8、4/8的计数不表示当前开放数量。第五城图文及最终五城地图在 `dune/`，详见下表。
+当前游戏为V6.4.1五城版。前四城图片保留各自验收时的历史版本；旧截图中2/8、3/8、4/8的计数不表示当前开放数量。第五城图文及最终五城地图在 `dune/`，详见下表。
 
 | 文件 | 说明 |
 | --- | --- |
@@ -126,3 +126,15 @@ V6.4第五城截图日期为2026-10-25，保存在 `dune/`。37张均通过生�
 | [35-mobile-workbench.jpg](dune/35-mobile-workbench.jpg) | 手机可滚动报告及固定验证按钮 |
 | [36-mobile-ending.jpg](dune/36-mobile-ending.jpg) | 手机六主线四支线结算与可达操作 |
 | [37-mobile-field.jpg](dune/37-mobile-field.jpg) | 手机偏振镜、稳身、交互与摇杆间距 |
+
+
+V6.4.1轻量引导补丁新增6张截图，保存在 `guidance/`。日期2026-10-25，全部来自正常页面和原生操作；手机图04–06为390×844视口。第一城使用独立本地测试来源新开局；第五城通过正式重玩、两关修复及故障簿追踪验证地下引导，没有注入进度。
+
+| 文件 | 说明 |
+| --- | --- |
+| [01-next-step.jpg](guidance/01-next-step.jpg) | 首次进入时解释移动、菱形和距离 |
+| [02-scan.jpg](guidance/02-scan.jpg) | 靠近设备后描边扫描，显示四步修复流程 |
+| [03-workbench.jpg](guidance/03-workbench.jpg) | 工作台操作指引与留在面板内的渐进线索 |
+| [04-mobile-workbench.jpg](guidance/04-mobile-workbench.jpg) | 手机提示按钮44px，完整验证入口仍固定 |
+| [05-mobile-next.jpg](guidance/05-mobile-next.jpg) | 手机步骤条使用溯源、交互、验证 |
+| [06-dune-weather.jpg](guidance/06-dune-weather.jpg) | 地下档案先提示切沙尘暴，再开启偏振镜 |

@@ -9,6 +9,7 @@ const profiles={
   '6.2.0':{receipt:'artifacts/v6.2-ui-checks.json',review:'docs/v6/THREAD_REVIEW.md',minimum:20},
   '6.3.0':{receipt:'artifacts/v6.3-ui-checks.json',review:'docs/v6/SNOW_REVIEW.md',minimum:35},
   '6.4.0':{receipt:'artifacts/v6.4-ui-checks.json',review:'docs/v6/DUNE_REVIEW.md',minimum:40},
+  '6.4.1':{receipt:'artifacts/v6.4.1-guide-ui-checks.json',review:'docs/v6/GUIDANCE_REVIEW.md',minimum:12},
 };
 const profile=profiles[manifest.version];
 if(!profile)throw new Error(`No reviewed release profile for ${manifest.version}`);

@@ -220,7 +220,7 @@ export class ThreadChapter {
   }
   private roam():void {this.result=false;show('thread-result',false);this.h.block(false);this.h.view.mode='follow';this.h.clearInput();this.updateHud();}
   hint():void {
-    const id=this.currentCase();if(id){const index=this.hints[id]??0;this.hints[id]=index+1;this.h.toast(THREAD_LESSONS[id].hints[Math.min(index,2)],9);}else this.h.toast(this.state.phase==='arrival'?'前方左侧蓝色断环角色就是 IRIS。靠近后按 E。':this.state.phase==='audit'?'到最北端 WAIT-FOR-∞ 终端按 E，运行综合回归。':this.state.phase==='evacuate'?'综合回归通过后，在同一站台再按 E 登上双线列车。':'M 打开任务册。蓝色支线可以回访，扫描过的站台可以接驳。',8);
+    const id=this.panel??this.currentCase();if(id){const index=this.hints[id]??0;this.hints[id]=index+1;this.h.toast(THREAD_LESSONS[id].hints[Math.min(index,2)],9);}else this.h.toast(this.state.phase==='arrival'?'前方左侧蓝色断环角色就是 IRIS。靠近后按 E。':this.state.phase==='audit'?'到最北端 WAIT-FOR-∞ 终端按 E，运行综合回归。':this.state.phase==='evacuate'?'综合回归通过后，在同一站台再按 E 登上双线列车。':'M 打开任务册。蓝色支线可以回访，扫描过的站台可以接驳。',8);
   }
   action(key:string,reverse=false):boolean {
     if(key==='Tab'&&this.blocked){

@@ -10,6 +10,7 @@ import type { Weather } from './forge-domain';
 import { ThreadChapter } from './thread-chapter';
 import { SnowChapter } from './snow-chapter';
 import { DuneChapter } from './dune-chapter';
+import { LightGuidance } from './guidance';
 
 const $ = <T extends HTMLElement = HTMLElement>(id:string):T => document.getElementById(id) as T;
 const show = (id:string,visible:boolean):void=>{$(id).hidden=!visible;};
@@ -45,7 +46,7 @@ let cinemaType:'order'|'recovery'|'ride'='order';
 let modalType:string|null=null;
 let priorFocus:HTMLElement|null=null;
 let dialogueIndex=-1;
-let hintCount=0;
+let hintCounts:Partial<Record<Chapter,number>>={};
 let hudAccumulator=0;
 let persistAccumulator=0;
 let saved=readProgress();
@@ -58,6 +59,7 @@ const forge=new ForgeChapter({campaign:()=>campaign,view,motor,audio,
 const thread=new ThreadChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnForge:enterForge,enterSnow,openMap:()=>openModal('map')});
 const snow=new SnowChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnThread:enterThread,enterDune,openMap:()=>openModal('map'),braceHeld:()=>input.keys.has('KeyF')});
 const dune=new DuneChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnSnow:enterSnow,openMap:()=>openModal('map'),braceHeld:()=>input.keys.has('KeyF'),network:()=>{const data=campaign.data;return (data.snow.phase==='complete'?data.snow:data.snowClearance??data.snow).patches['NET-02'];}});
+const guidance=new LightGuidance(hint);
 show('btn-continue',saved!==null);
 const dialogue=[
   '我女儿在 B 站。列车每天经过那里，却再也没有停下来。系统说，那座车站不存在。',
@@ -101,7 +103,7 @@ function start(resume=false):void {
   motor.obstacles=world.obstacles;motor.bounds={...DOCK_BOUNDS};
   motor.reset();motor.warp(CHECKPOINTS[campaign.data.chapter]);view.yaw=0;view.pitch=.34;
   world.showDraft(null);syncWorld();setMode('play');view.mode='follow';
-  dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);scanUntil=0;hintCount=0;
+  dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);scanUntil=0;hintCounts={};
   audio.unlock();audio.setEnabled(settings.sound);audio.setPaused(false);persist();updateHud();
   audio.city='dock';changeWeather(campaign.data.weather,false);
   if(campaign.data.city==='forge'){forge.enter();return;}
@@ -287,7 +289,7 @@ function showProof(result:RunResult,preview=false):void {
   proof=result;show('proof-panel',true);$('proof-panel').className=preview?'preview':result.passed?'passed':'';
   setText('proof-label',`${preview?'COUNTERFACTUAL / 未提交':'ASSERTION REPORT'} · ${result.runId}`);
   setText('proof-title',preview?(result.passed?'预演：路线可行':'预演：发现反例'):(result.passed?'回归验证通过':'世界给出了反例'));
-  setText('proof-reason',result.reason);
+  setText('proof-reason',preview&&result.passed?'方案通过预演，但尚未提交。点「返回草案」，再点「重放并验证」，城市才会正式恢复。':result.reason);
   $('proof-checks').replaceChildren();
   result.assertions.forEach(assertion=>{const row=document.createElement('div');row.className='proof-check'+(assertion.passed?' good':'');const icon=document.createElement('span');icon.textContent=assertion.passed?'✓':'×';const text=document.createElement('p');text.textContent=assertion.name;const detail=document.createElement('small');detail.textContent=assertion.detail;text.append(detail);row.append(icon,text);$('proof-checks').append(row);});
   $('proof-log').replaceChildren();result.log.forEach(event=>{const row=document.createElement('div');row.className='log-event';const tick=document.createElement('b');tick.textContent=`t+${(event.tick/60).toFixed(2)}`;row.append(tick,document.createTextNode(event.detail));$('proof-log').append(row);});
@@ -336,7 +338,7 @@ function hint():void {
   if(snow.active){snow.hint();return;}
   if(thread.active){thread.hint();return;}
   if(forge.active){forge.hint();return;}
-  const c=campaign.data.chapter;hintCount++;
+  const c=campaign.data.chapter,index=hintCounts[c]??0;hintCounts[c]=index+1;
   const hints:Record<Chapter,string[]>={
     meet:['向前走，左侧雨棚下的断环角色就是 MIRA。靠近后按 E。'],
     reorder:['先观察：平台删除时，旅客还站在上面。按 Q 捕获轨迹，再按 E 进入编辑。','想一想：生还记录只能在旅客离开后保存；删除站台也要等旅客离开。','将「让旅客离开」移到第一位，另外两个事件放在后面。按 R 验证两个速度的旅客。'],
@@ -344,7 +346,7 @@ function hint():void {
     board:['到 A 站的列车旁按 E。列车会沿刚刚证明的线路返航。'],
     complete:['到 END 站按 E，或点击任务下方「前往脉冲炉」。天气按钮能切换晴雨。'],
   };
-  const list=hints[c];toast(list[Math.min(hintCount-1,list.length-1)],7);
+  const list=hints[c];toast(list[Math.min(index,list.length-1)],7);
 }
 
 function openModal(type:string):void {
@@ -496,7 +498,7 @@ function frame(timestamp:number):void {
     persistAccumulator+=dt;if(persistAccumulator>6&&mode!=='menu'){persistAccumulator=0;persist();}
   }
   view.render(dt,motor.position,mode==='play'?motor.speed:0,paused||dialogueIndex>=0);
-  hudAccumulator+=dt;if(hudAccumulator>.07){hudAccumulator=0;if(mode==='play')updateHud();}
+  hudAccumulator+=dt;if(hudAccumulator>.07){hudAccumulator=0;if(mode==='play')updateHud();guidance.update({city:view.city,progress:campaign.data,playing:mode==='play',obscured:paused||dialogueIndex>=0});}
   if(mode==='patch'&&patchCase==='DS-01'&&view.city==='dock')positionNodes();
   if(!$('performance').hidden){const stats=view.getDrawStats();setText('performance',`${view.fps} FPS / ${view.frameMs.toFixed(1)} ms\n${stats.calls} draws · ${(stats.triangles/1000).toFixed(1)}k tris\n${stats.geometries} geom · ${stats.textures} tex`);}
 }
