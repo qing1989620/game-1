@@ -99,7 +99,7 @@
     {
       "id": "train-to-result",
       "pass": true,
-      "detail": "chapter=complete mode=result elapsed=30.6s route=A→B→C→END"
+      "detail": "chapter=complete mode=result elapsed=28.7s route=A→B→C→END"
     },
     {
       "id": "restart-restores-broken-route",

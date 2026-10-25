@@ -4,7 +4,7 @@ import { CityView } from './view';
 import { A_CHECKPOINT, CHECKPOINTS, DOCK_BOUNDS, Motor, type V3 } from './physics';
 import { GameInput } from './input';
 import { CityAudio } from './audio';
-import { patchCoach, playCoach, readOnboarded, writeOnboarded, type CoachContext } from './coach';
+import { patchCoach, readOnboarded, writeOnboarded } from './coach';
 import { MIRA_POS, NODE_POS, REORDER_POS, STATION_POS } from './world';
 import { ForgeChapter } from './forge-chapter';
 import type { Weather } from './forge-domain';
@@ -13,6 +13,7 @@ import { SnowChapter } from './snow-chapter';
 import { DuneChapter } from './dune-chapter';
 import {DUNE_MAIN} from './dune-domain';
 import {GroveChapter} from './grove-chapter';
+import { LightGuidance } from './guidance';
 
 const $ = <T extends HTMLElement = HTMLElement>(id:string):T => document.getElementById(id) as T;
 const show = (id:string,visible:boolean):void=>{$(id).hidden=!visible;};
@@ -48,7 +49,7 @@ let cinemaType:'order'|'recovery'|'ride'='order';
 let modalType:string|null=null;
 let priorFocus:HTMLElement|null=null;
 let dialogueIndex=-1;
-let hintCount=0;
+let hintCounts:Partial<Record<Chapter,number>>={};
 let pendingStart=false;
 let hudAccumulator=0;
 let persistAccumulator=0;
@@ -64,6 +65,7 @@ const thread=new ThreadChapter({campaign:()=>campaign,view,motor,audio,block:on=
 const snow=new SnowChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnThread:enterThread,enterDune,openMap:()=>openModal('map'),braceHeld:()=>input.keys.has('KeyF')});
 const dune=new DuneChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnSnow:enterSnow,enterGrove,openMap:()=>openModal('map'),braceHeld:()=>input.keys.has('KeyF'),network:()=>{const data=campaign.data;return (data.snow.phase==='complete'?data.snow:data.snowClearance??data.snow).patches['NET-02'];}});
 const grove=new GroveChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnDune:()=>previewGrove?start():enterDune(),openMap:()=>openModal('map'),preview:()=>previewGrove,network:()=>{const data=campaign.data;return (data.snow.phase==='complete'?data.snow:data.snowClearance??data.snow).patches['NET-02'];}});
+const guidance=new LightGuidance(hint);
 show('btn-continue',saved!==null);
 show('btn-grove-preview',import.meta.env.DEV);
 const dialogue=[
@@ -110,7 +112,7 @@ function start(resume=false):void {
   motor.obstacles=world.obstacles;motor.bounds={...DOCK_BOUNDS};
   motor.reset();motor.warp(CHECKPOINTS[campaign.data.chapter]);view.yaw=0;view.pitch=.34;
   world.showDraft(null);syncWorld();setMode('play');view.mode='follow';
-  dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);scanUntil=0;hintCount=0;
+  dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);scanUntil=0;hintCounts={};
   audio.unlock();audio.setEnabled(settings.sound);audio.setPaused(false);persist();updateHud();
   audio.city='dock';changeWeather(campaign.data.weather,false);
   if(campaign.data.city==='forge'){forge.enter();return;}
@@ -163,11 +165,11 @@ function goal():{pos:V3;label:string;code:string;title:string;description:string
   return {pos:STATION_POS.END,label:'END / 城际列车',code:'CHAPTER 01 / RESTORED',title:'下一站，脉冲炉',description:'指针港已经恢复。前往 END 站按 E，或点击下方按钮乘城际列车。'};
 }
 function updateHud():void {
-  if(grove.active){grove.updateHud();updateCoach();return;}
-  if(dune.active){dune.updateHud();updateCoach();return;}
-  if(snow.active){snow.updateHud();updateCoach();return;}
-  if(thread.active){thread.updateHud();updateCoach();return;}
-  if(forge.active){forge.updateHud();updateCoach();return;}
+  if(grove.active){grove.updateHud();return;}
+  if(dune.active){dune.updateHud();return;}
+  if(snow.active){snow.updateHud();return;}
+  if(thread.active){thread.updateHud();return;}
+  if(forge.active){forge.updateHud();return;}
   const g=goal();setText('quest-code',g.code);setText('quest-title',g.title);setText('quest-description',g.description);
   const d=distance(motor.position,g.pos);setText('quest-distance',`${d<6?'◇ 已抵达':'↗ '+Math.round(d)+' m'}  /  ${g.label}`);
   setText('identity-status',campaign.data.chapter==='meet'?'身份未知 / UNKNOWN':'因果织针 / 已连接');
@@ -182,27 +184,6 @@ function updateHud():void {
     if(p.visible) {const marker=document.createElement('div');marker.className='world-marker'+(campaign.data.chapter==='rail'?' error':'');marker.style.left=`${p.x}px`;marker.style.top=`${p.y}px`;marker.innerHTML=`<span>${g.label}</span><i></i>`;markers.append(marker);}
     if(scanUntil>now&&campaign.data.chapter==='rail')for(const id of STATIONS){const p=view.project(NODE_POS[id]);if(p.visible){const m=document.createElement('div');m.className='world-marker'+(id==='B'?' error':'');m.style.left=`${p.x}px`;m.style.top=`${p.y}px`;m.innerHTML=`<span>${id}${id==='B'?' / 无列车停靠':''}</span><i></i>`;markers.append(m);}}
   }
-  updateCoach();
-}
-/**
- * Name the single next action, based on live state. Reads whichever city is
- * loaded, so the guide never shows pointer-dock advice inside another city.
- */
-function updateCoach():void {
-  const card=$('coach');
-  if(mode!=='play'||modalType!==null){card.hidden=true;return;}
-  const step=playCoach(coachContext());
-  if(!step){card.hidden=true;return;}
-  card.hidden=false;
-  setText('coach-key',step.key);setText('coach-action',step.label);setText('coach-hint',step.hint);
-}
-function coachContext():CoachContext {
-  const d=campaign.data;
-  if(view.city==='dune')return {city:'dune',phase:d.dune.phase,evidence:d.dune.evidence,completed:d.dune.completed};
-  if(view.city==='forge')return {city:'forge',phase:d.forge.phase,evidence:d.forge.evidence};
-  if(view.city==='thread')return {city:'thread',phase:d.thread.phase,evidence:d.thread.evidence};
-  if(view.city==='snow')return {city:'snow',phase:d.snow.phase,evidence:d.snow.evidence,delivery:d.snow.delivery};
-  return {city:'dock',chapter:d.chapter,evidence:d.evidence};
 }
 function nearInteraction():{kind:string;label:string}|null {
   const p=motor.position,c=campaign.data.chapter;
@@ -265,8 +246,6 @@ function openPatch(id:'Q-01'|'DS-01'):void {
   setText('patch-code',id==='Q-01'?'Q-01 / EVENT ORDER':'DS-01 / LINKED TRANSIT');
   setText('patch-title',id==='Q-01'?'先离开，再消失。':'找回被跳过的一站。');
   setText('patch-description',id==='Q-01'?'拖动事件卡片，改变发生顺序。旅客必须安全离开，生还记录也不能丢失。':'拖动三维节点的因果线，改写下一站。你也可以点选源节点，再点目标站。');
-  const coach=patchCoach(id);
-  setText('patch-coach-key',coach.key);setText('patch-coach-action',coach.label);setText('patch-coach-hint',coach.hint);
   $('patch-observation').innerHTML=id==='Q-01'?'<div class="observation"><small class="mono">OBSERVED / 观察到的顺序</small><strong>DELETE → EXIT → ARCHIVE</strong><p>站台消失时，旅客还没有离开。</p></div>':`<div class="observation"><small class="mono">OBSERVED / 实际停靠</small><strong>${traverse(campaign.data.rail).route.join(' → ')}</strong><p>B 站：有旅客等待，未收到列车。</p></div>`;
   renderEditor();renderNodes();world.showDraft(id==='DS-01'?draftRail:null);audio.cue('select');
   $('btn-close-patch').focus({preventScroll:true});$('patch-panel').scrollTop=0;
@@ -326,7 +305,7 @@ function showProof(result:RunResult,preview=false):void {
   proof=result;show('proof-panel',true);$('proof-panel').className=preview?'preview':result.passed?'passed':'';
   setText('proof-label',`${preview?'COUNTERFACTUAL / 未提交':'ASSERTION REPORT'} · ${result.runId}`);
   setText('proof-title',preview?(result.passed?'预演：路线可行':'预演：发现反例'):(result.passed?'回归验证通过':'世界给出了反例'));
-  setText('proof-reason',result.reason);
+  setText('proof-reason',preview&&result.passed?'方案通过预演，但尚未提交。点「返回草案」，再点「重放并验证」，城市才会正式恢复。':result.reason);
   $('proof-checks').replaceChildren();
   result.assertions.forEach(assertion=>{const row=document.createElement('div');row.className='proof-check'+(assertion.passed?' good':'');const icon=document.createElement('span');icon.textContent=assertion.passed?'✓':'×';const text=document.createElement('p');text.textContent=assertion.name;const detail=document.createElement('small');detail.textContent=assertion.detail;text.append(detail);row.append(icon,text);$('proof-checks').append(row);});
   $('proof-log').replaceChildren();result.log.forEach(event=>{const row=document.createElement('div');row.className='log-event';const tick=document.createElement('b');tick.textContent=`t+${(event.tick/60).toFixed(2)}`;row.append(tick,document.createTextNode(event.detail));$('proof-log').append(row);});
@@ -376,7 +355,7 @@ function hint():void {
   if(snow.active){snow.hint();return;}
   if(thread.active){thread.hint();return;}
   if(forge.active){forge.hint();return;}
-  const c=campaign.data.chapter;hintCount++;
+  const c=campaign.data.chapter,index=hintCounts[c]??0;hintCounts[c]=index+1;
   const hints:Record<Chapter,string[]>={
     meet:['向前走，左侧雨棚下的断环角色就是 MIRA。靠近后按 E。'],
     reorder:['先观察：平台删除时，旅客还站在上面。按 Q 捕获轨迹，再按 E 进入编辑。','想一想：生还记录只能在旅客离开后保存；删除站台也要等旅客离开。','将「让旅客离开」移到第一位，另外两个事件放在后面。按 R 验证两个速度的旅客。'],
@@ -384,7 +363,7 @@ function hint():void {
     board:['到 A 站的列车旁按 E。列车会沿刚刚证明的线路返航。'],
     complete:['到 END 站按 E，或点击任务下方「前往脉冲炉」。天气按钮能切换晴雨。'],
   };
-  const list=hints[c];toast(list[Math.min(hintCount-1,list.length-1)],7);
+  const list=hints[c];const detailed=index>=2&&(c==='reorder'||c==='rail')?patchCoach(c==='reorder'?'Q-01':'DS-01').hint:null;toast(detailed??list[Math.min(index,list.length-1)],7);
 }
 
 function openModal(type:string):void {
@@ -415,16 +394,17 @@ function openModal(type:string):void {
     $('map-dune').onclick=()=>{if(dune.active){closeModal();dune.openJournal();}else enterDune();};
     $('map-grove').onclick=()=>{if(grove.active){closeModal();grove.openJournal();}else enterGrove();};
   } else if(type==='coach') {
-    content.innerHTML='<div class="eyebrow">HOW TO PLAY / 上手四步</div><h2 id="modal-title">你不战斗。你修因果。</h2>'+
+    content.innerHTML='<div class="eyebrow">HOW TO PLAY / 上手四步</div><h2 id="modal-title">看见错误，再修好城市。</h2>'+
       '<p class="coach-loop">这座城市按因果运行。你的任务不是打赢它，而是<b>找到哪里先错了，把它改成对的，然后让世界重放一遍</b>。</p>'+
       '<ol class="coach-steps">'+
       '<li><b>走过去</b><span>WASD 移动，右键拖动转视角。屏幕左上角始终告诉你下一步去哪。</span></li>'+
       '<li><b>按 Q 扫描</b><span>靠近异常点扫描取证。<b>没扫描就无法编辑</b>——这是硬性前置条件。</span></li>'+
-      '<li><b>按 E 打断点</b><span>局部时间冻结。拖动事件卡片改顺序，或重连车站指针。</span></li>'+
-      '<li><b>按 R 重放验证</b><span>失败会给一条可复现的反例，告诉你错在哪。<b>不扣次数，不丢证据。</b></span></li>'+
+      '<li><b>按 E 打断点</b><span>在工作台修改规则。首城可调事件顺序或重连指针；天气集电台会持续运行，需冻结时点右上角暂停。</span></li>'+
+      '<li><b>按 R 重放验证</b><span>失败会给一条可复现的反例，告诉你错在哪。<b>可反复尝试，失败保留证据。</b></span></li>'+
       '</ol>'+
-      '<p class="modal-rule">每个谜题都不止一个正确答案——只要世界最终是对的，验证就会通过。</p>'+
+      '<p class="modal-rule">参考线索逐步尝试，最后点完整验证提交。满足关卡约束的有效方案都会被认可。</p>'+
       '<div class="modal-actions"><button class="primary" id="modal-resume">明白了 <span>→</span></button></div>';
+    if(window.innerWidth<=700)content.innerHTML=content.innerHTML.replace('WASD 移动，右键拖动转视角。','左下摇杆移动，右侧空白拖动转视角。').replaceAll('按 Q 扫描','点「溯源」扫描').replace('按 E 打断点','点交互提示').replace('按 R 重放验证','点完整验证');
     writeOnboarded();
   } else content.innerHTML='<div class="eyebrow">RE:FLOW 404 / 断点之城</div><h2 id="modal-title">一个错误，也有存在的意义。</h2><p>CIVITAS 是一座运行中的城市。路网是数据结构，列车是执行事件，居民的名字是一条不能丢失的记录。<br>当清除署决定删除异常，零号选择先听懂它们。</p><p>当前旅程贯穿六城。前五城通过探索、取证和重放修复因果；镜库城的 r43 切换完成后，档案井会自动开启旧水道，带你抵达潮汐红树林。第六城是一段连续播放的结局，交付从雪原带来的信，并留下远方仍亮着的灯。</p><p class="modal-rule">城市、角色与声音由原创程序生成。运行中无需登录，不上传存档，不调用 AI 或第三方服务。存档仅保留在当前浏览器。</p><div class="modal-actions"><button class="primary" id="modal-resume">回到世界 <span>→</span></button><button class="text-button" id="modal-card-link">查看零号设定卡 ↗</button></div>';
   $('modal-resume')?.addEventListener('click',closeModal);
@@ -558,7 +538,7 @@ function frame(timestamp:number):void {
     persistAccumulator+=dt;if(persistAccumulator>6&&mode!=='menu'){persistAccumulator=0;persist();}
   }
   view.render(dt,motor.position,mode==='play'?motor.speed:0,paused||dialogueIndex>=0);
-  hudAccumulator+=dt;if(hudAccumulator>.07){hudAccumulator=0;if(mode==='play')updateHud();}
+  hudAccumulator+=dt;if(hudAccumulator>.07){hudAccumulator=0;if(mode==='play')updateHud();guidance.update({city:view.city,progress:campaign.data,playing:mode==='play',obscured:paused||dialogueIndex>=0});}
   if(mode==='patch'&&patchCase==='DS-01'&&view.city==='dock')positionNodes();
   if(!$('performance').hidden){const stats=view.getDrawStats();setText('performance',`${view.fps} FPS / ${view.frameMs.toFixed(1)} ms\n${stats.calls} draws · ${(stats.triangles/1000).toFixed(1)}k tris\n${stats.geometries} geom · ${stats.textures} tex`);}
 }

@@ -242,7 +242,7 @@ function snowCoach(ctx: SnowContext): CoachStep | null {
     return {
       key: 'M',
       label: '打开勘测册',
-      hint: '白噪雪原已恢复。四城的修复记录都已保留。',
+      hint: '白噪雪原已恢复。五城的修复记录都已保留。',
     };
   }
   // The five main relays each need their own evidence scanned before editing.

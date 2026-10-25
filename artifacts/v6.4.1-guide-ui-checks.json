@@ -1,0 +1,219 @@
+{
+  "version": "6.4.1",
+  "date": "2026-10-25",
+  "method": "CUA native input and normal page controls; no injected progress or hidden runtime access",
+  "checks": [
+    {
+      "check": "Guide stays hidden on the main menu",
+      "passed": true,
+      "evidence": "Menu has no extra tutorial overlay."
+    },
+    {
+      "check": "After orientation world guide explains movement, marker distance and camera",
+      "passed": true,
+      "evidence": "Closing the one-time orientation with Escape enters normal movement; a single compact transparent coach is visible."
+    },
+    {
+      "check": "Near NPC guide switches directly to E dialogue without asking for a scan",
+      "passed": true,
+      "evidence": "NPC is reached through native W movement."
+    },
+    {
+      "check": "Guidance hides while dialogue is active",
+      "passed": true,
+      "evidence": "NPC dialogue retains the existing Continue E action."
+    },
+    {
+      "check": "Unscanned device highlights Trace and the Q step",
+      "passed": true,
+      "evidence": "First repair reached by walking; guide says Q scan before E, active breadcrumb②Q扫描."
+    },
+    {
+      "check": "Acquiring evidence switches guide to E without committing repair",
+      "passed": true,
+      "evidence": "Q-01 remains current objective; interact button is outlined, breadcrumb③E工作台."
+    },
+    {
+      "check": "Workbench offers persistent progressive hints and states full verification is required",
+      "passed": true,
+      "evidence": "Two native hint clicks reveal observation then reasoning, retain original candidate order, and keep notes inside the workbench."
+    },
+    {
+      "check": "Preview success explicitly says it is uncommitted and guides the player back to full verification",
+      "passed": true,
+      "evidence": "Native preview after reordering EXIT first; repair still requires the separate full verification action."
+    },
+    {
+      "check": "Guide stays out of repair cinematics",
+      "passed": true,
+      "evidence": "Reverified the actual saved DB-S4 policy; checked immediately during PATCH COMMITTED repair cinema, before its3-second auto-finish."
+    },
+    {
+      "check": "After actual verification guide follows the next objective",
+      "passed": true,
+      "evidence": "First bridge restored by normal verification; next route guidance points to the rail task."
+    },
+    {
+      "check": "Optional workbench hint follows the case being inspected rather than the main story",
+      "passed": true,
+      "evidence": "Completed main story, DB-S1 reopened normally; inline hint discusses cache refill, not the finished ending."
+    },
+    {
+      "check": "Changing cases clears the previous inline hint",
+      "passed": true,
+      "evidence": "DB-S1 cache note is absent when DB-S4 monitoring workbench opens."
+    },
+    {
+      "check": "New help button participates in keyboard focus and Enter activation",
+      "passed": true,
+      "evidence": "Close button→Tab→case hint→Enter reveals monitoring-specific guidance."
+    },
+    {
+      "check": "390×844 workbench guide fits with a 44px help button and fixed verification action",
+      "passed": true,
+      "evidence": "No document horizontal overflow; help button44px, verification bottom830.2 within844px viewport."
+    },
+    {
+      "check": "390×844 world guide uses touch language and keeps the transparent HUD",
+      "passed": true,
+      "evidence": "Confirmed the actual page viewport390×844, then read touch-specific movement guidance. Objective background remains transparent and no forced tutorial modal appears."
+    },
+    {
+      "check": "Guide hides on pause and returns after resume",
+      "passed": true,
+      "evidence": "Retested on merged build: pause hides the single shared coach."
+    },
+    {
+      "check": "Forge workbench uses its actual validation label and contextual power hint",
+      "passed": true,
+      "evidence": "Native K-13 interaction→walk to relay→Q→E; power simulation continues and hint gives weather/isolation instructions."
+    },
+    {
+      "check": "Thread workbench guide uses its real validation action and lock-specific hint",
+      "passed": true,
+      "evidence": "Normal IRIS dialogue, walking until interaction range, Q then E; hint concerns the lock wait cycle."
+    },
+    {
+      "check": "Snow workbench uses its actual validation label and weather-specific hint",
+      "passed": true,
+      "evidence": "Normal KESTREL dialogue and walking to WF-02; paper-themed workbench retains scroll and verify footer."
+    },
+    {
+      "check": "Snow objective retains transparent background after adding next-step text",
+      "passed": true,
+      "evidence": "Inspected at390×844 before opening the workbench; no opaque objective panel added."
+    },
+    {
+      "check": "Mobile highlighted joystick leads to a reachable interaction without keyboard movement",
+      "passed": true,
+      "evidence": "390×844: stick outlined initially;2.3s native pointer hold reaches MIRA and guide switches to tap interaction."
+    },
+    {
+      "check": "Mobile step strip names actual touch actions instead of keyboard keys",
+      "passed": true,
+      "evidence": "Phone repair sequence is走近→溯源→交互→验证."
+    },
+    {
+      "check": "Five-city guidance changes preserve the previously completed fifth-city save",
+      "passed": true,
+      "evidence": "Full reload after first/second/third/fourth/fifth UI checks still shows6/6 main,4/4 side,r43; no automatic reset or completion."
+    },
+    {
+      "check": "New buried archive guidance points to sandstorm before requesting a scan",
+      "passed": true,
+      "evidence": "On final build, DB-S1 is tracked before first evidence; standing near the previously repaired DB-02 does not suppress weather instructions."
+    },
+    {
+      "check": "Storm guidance then points to the polarizer before Q",
+      "passed": true,
+      "evidence": "After native weather switch, the lens is highlighted before a first scan."
+    },
+    {
+      "check": "Next objective is prioritized over a repaired device still beside the player",
+      "passed": true,
+      "evidence": "Reload at previous billing checkpoint; current task is snapshot, old billing interaction remains available but does not hijack next-step guidance."
+    },
+    {
+      "check": "Guidance and lens toggles do not collect evidence or unlock unvisited shortcuts",
+      "passed": true,
+      "evidence": "Cache card stays可探索·沙下封存; only the two actual main repairs are complete."
+    },
+    {
+      "check": "Final build mobile scan and tap interaction follow the current first-city target",
+      "passed": true,
+      "evidence": "Latest target-priority filter still allows actual Q-01: native Scan button→tap interaction opens workbench, without keyboard input."
+    },
+    {
+      "check": "Merged first-time orientation is closable and uses touch instructions",
+      "passed": true,
+      "evidence": "Existing upstream orientation retained; phone copy explains scan/interaction/full verification and the realtime weather workbench."
+    },
+    {
+      "check": "Merged world has one guidance card and keeps upstream coach identities",
+      "passed": true,
+      "evidence": "Shared card reuses coach/key/action/hint IDs and the proximity-aware guide."
+    },
+    {
+      "check": "Merged first workbench has one hint area with no duplicate automatic answer",
+      "passed": true,
+      "evidence": "Normal touch scan and interaction; inline hint is observation-first and uses the common verification instructions."
+    },
+    {
+      "check": "Merged desktop flow keeps observation hints preview and actual verification separate",
+      "passed": true,
+      "evidence": "Final merged build: one world card, native NPC dialogue/Q/E, two progressive notes, then preview after reordering."
+    },
+    {
+      "check": "Merged guide hides during actual verification cinema",
+      "passed": true,
+      "evidence": "Native Q-01 full verification starts repair cinema, and both guide visibility wrappers hide."
+    },
+    {
+      "check": "Merged coach still prioritizes the new incident over the old nearby device",
+      "passed": true,
+      "evidence": "Remote phase coach and proximity logic share one card; at old billing checkpoint the new snapshot task stays primary."
+    },
+    {
+      "check": "Merged coach keeps the buried-archive weather prerequisite",
+      "passed": true,
+      "evidence": "Tracked unscanned cache followup in sun highlights weather rather than an old completed interaction."
+    },
+    {
+      "check": "Merged shared coach follows forge thread and snow on normal city travel",
+      "passed": true,
+      "evidence": "Three actual map trips; each single card changes to that city current incident and supports touch labels."
+    },
+    {
+      "check": "Merged snow coach preserves transparent city styling",
+      "passed": true,
+      "evidence": "Shared card inherits the snow palette and has no opaque objective background."
+    },
+    {
+      "check": "Reopening How to Play from menu returns to menu without resetting continuation",
+      "passed": true,
+      "evidence": "Manual orientation has no pending new start; existing Continue remains visible."
+    },
+    {
+      "check": "Continuation after reopening instructions retains the scanned first repair",
+      "passed": true,
+      "evidence": "Help does not replace or clear saved evidence."
+    },
+    {
+      "check": "Acknowledged orientation is not repeated on the next new game",
+      "passed": true,
+      "evidence": "Second explicit new game starts directly; home How to Play remains available."
+    }
+  ],
+  "finalConsoleErrors": [],
+  "viewportChecks": [
+    "1280x720",
+    "390x844"
+  ],
+  "integratedRemoteBaseline": "deb90c8",
+  "sourceFingerprint": "49079478d0107fec35140454ac9fbce132eeb5cbdcd566b367bfc539c39ce83f",
+  "review": "docs/v6/GUIDANCE_REVIEW.md",
+  "buildAssets": [
+    "assets/index-DDyY4Ica.js",
+    "assets/index-BT5H6hbh.css"
+  ]
+}
