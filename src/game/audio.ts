@@ -8,7 +8,7 @@ export class CityAudio {
   private beat = 0;
   private next = 0;
   recovered = false;
-  city: 'dock'|'forge'|'thread'|'snow' = 'dock';
+  city: 'dock'|'forge'|'thread'|'snow'|'dune' = 'dock';
   windSeverity=0;
   private windBuffer:AudioBuffer|null=null;
   unlock(): void {
@@ -40,25 +40,25 @@ export class CityAudio {
     if(!this.ctx||this.paused)return;
     const now=this.ctx.currentTime;
     if(this.next<now-.5)this.next=now+.05;
-    const notes=this.city==='snow'?(this.recovered?[110,146.83,164.81,220,293.66,220,164.81,146.83]:[110,123.47,146.83,164.81,110,98,123.47,82.41]):this.city==='thread'?(this.recovered?[130.81,164.81,196,261.63,293.66,261.63,196,164.81]:[130.81,146.83,196,174.61,130.81,116.54,146.83,98]):this.recovered?[146.83,185,220,277.18,293.66,220,185,164.81]:[146.83,164.81,220,196,146.83,130.81,164.81,110];
+    const notes=this.city==='dune'?(this.recovered?[146.83,174.61,220,261.63,293.66,349.23,293.66,220]:[146.83,155.56,220,196,146.83,130.81,174.61,110]):this.city==='snow'?(this.recovered?[110,146.83,164.81,220,293.66,220,164.81,146.83]:[110,123.47,146.83,164.81,110,98,123.47,82.41]):this.city==='thread'?(this.recovered?[130.81,164.81,196,261.63,293.66,261.63,196,164.81]:[130.81,146.83,196,174.61,130.81,116.54,146.83,98]):this.recovered?[146.83,185,220,277.18,293.66,220,185,164.81]:[146.83,164.81,220,196,146.83,130.81,164.81,110];
     while(this.next<now+.2){
       const at=this.next;
       if(this.beat%4===0){this.tone(notes[Math.floor(this.beat/4)%8]/2,at,2.5,.09,'sine');this.tone(notes[Math.floor(this.beat/4)%8],at,3,.025,'triangle');}
       if(this.beat%2===0)this.tone(notes[(this.beat/2)%8]*2,at,1.3,this.recovered ? .027 : .013,'sine');
       if(this.beat%4===0&&this.city!=='snow')this.tone(43,at,.14,.11);
-      if(this.city==='snow'&&this.beat%4===0)this.wind(at);
+      if((this.city==='snow'||this.city==='dune')&&this.beat%4===0)this.wind(at);
       if(this.city==='forge'){
         if(this.beat%2===1)this.tone(110*(1+this.beat%3),at,.06,.018,'square');
         if(this.beat%8===4)this.tone(55,at,.16,.08,'triangle');
       }
       if(this.city==='thread'&&this.beat%2===1)this.tone(notes[this.beat%8]*2,at,.24,.019,'triangle');
-      this.beat++;this.next+=60/(this.city==='snow'?68:this.city==='thread'?104:this.city==='forge'?110:88)/2;
+      this.beat++;this.next+=60/(this.city==='dune'?76:this.city==='snow'?68:this.city==='thread'?104:this.city==='forge'?110:88)/2;
     }
   }
   private wind(at:number):void {
     if(!this.ctx||!this.bus)return;
     if(!this.windBuffer){this.windBuffer=this.ctx.createBuffer(1,this.ctx.sampleRate*2,this.ctx.sampleRate);const data=this.windBuffer.getChannelData(0);let seed=177;for(let i=0;i<data.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;data[i]=((seed>>>0)/4294967296)*2-1;}}
-    const source=this.ctx.createBufferSource(),filter=this.ctx.createBiquadFilter(),gain=this.ctx.createGain();source.buffer=this.windBuffer;filter.type='lowpass';filter.frequency.value=220+this.windSeverity*600;
+    const source=this.ctx.createBufferSource(),filter=this.ctx.createBiquadFilter(),gain=this.ctx.createGain();source.buffer=this.windBuffer;filter.type=this.city==='dune'?'bandpass':'lowpass';filter.frequency.value=(this.city==='dune'?480:220)+this.windSeverity*600;
     gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(.012+this.windSeverity*.04,at+.5);gain.gain.exponentialRampToValueAtTime(.0001,at+1.9);source.connect(filter);filter.connect(gain);gain.connect(this.bus);source.start(at);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
   }
   cue(kind:'scan'|'select'|'fail'|'success'|'step'|'jump'): void {

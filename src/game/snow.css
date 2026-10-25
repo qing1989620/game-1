@@ -111,3 +111,5 @@ body[data-city=snow] .film-vignette{background:radial-gradient(ellipse at 50% 45
   .snow-result-links button{min-height:44px;font-size:11px}
   .snow-result-links{gap:5px}
 }
+
+#snow-next-city{width:100%;margin-bottom:14px}

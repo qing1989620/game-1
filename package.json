@@ -1,9 +1,9 @@
 {
   "name": "reflow-404",
   "private": true,
-  "version": "6.3.0",
+  "version": "6.4.0",
   "type": "module",
-  "description": "RE:FLOW 404《断点之城》——四城探索，从雨港走进白噪雪原；五条网络与风雪主线、三段支线故事、真实横风、稳身与三站风暴投递。",
+  "description": "RE:FLOW 404《断点之城》——五城探索：赤砂档案海、沙尘暴偏振显影、六个生产数据故障、四个遗留问题、跨城回归与灰度回滚。",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

@@ -1,6 +1,6 @@
 # V6.1 指针港 + 脉冲炉 · 验收记录
 
-> 本文保留 V6.1 双城历史基线。V6.2 第三城历史回归见 [THREAD_REVIEW.md](THREAD_REVIEW.md)；当前 V6.3 四城、157 项测试与风雪回归见 [SNOW_REVIEW.md](SNOW_REVIEW.md)。
+> 本文保留该城市开发时的历史基线。当前V6.4开放五城，243项自动化测试；最新第五城验收与限制见 [DUNE_REVIEW.md](DUNE_REVIEW.md)。
 
 日期：2026-10-24，Asia/Shanghai。环境：Windows、Node.js 24.15.0、Chromium 系 Codex 内置浏览器。主界面 1280×720，手机界面使用实际 390×844 浏览器视口覆盖；不等同于手机硬件测试。
 

@@ -7,8 +7,10 @@ import { WeatherRig } from './weather';
 import type { Weather } from './forge-domain';
 import { ThreadWorld } from './thread-world';
 import { SnowWorld } from './snow-world';
+import { DuneWorld } from './dune-world';
+import { followCameraPosition } from './camera-collision';
 
-export type ViewMode = 'menu' | 'follow' | 'order' | 'rail' | 'recovery' | 'ride' | 'result' | 'forge-arrival' | 'forge-power' | 'forge-alu' | 'forge-rise' | 'forge-result' | 'thread-arrival' | 'thread-device' | 'thread-audit' | 'thread-ride' | 'thread-result' | 'snow-arrival' | 'snow-device' | 'snow-audit' | 'snow-final' | 'snow-result';
+export type ViewMode = 'menu' | 'follow' | 'order' | 'rail' | 'recovery' | 'ride' | 'result' | 'forge-arrival' | 'forge-power' | 'forge-alu' | 'forge-rise' | 'forge-result' | 'thread-arrival' | 'thread-device' | 'thread-audit' | 'thread-ride' | 'thread-result' | 'snow-arrival' | 'snow-device' | 'snow-audit' | 'snow-final' | 'snow-result' | 'dune-arrival' | 'dune-device' | 'dune-audit' | 'dune-result';
 export class CityView {
   renderer: T.WebGLRenderer;
   camera = new T.PerspectiveCamera(62,1,.15,1300);
@@ -17,14 +19,14 @@ export class CityView {
   forge: PulseWorld | null = null;
   thread: ThreadWorld | null = null;
   snow: SnowWorld | null = null;
-  city: 'dock' | 'forge' | 'thread' | 'snow' = 'dock';
+  dune: DuneWorld | null = null;
+  city: 'dock' | 'forge' | 'thread' | 'snow' | 'dune' = 'dock';
   weather: Weather = 'rain';
   mode: ViewMode = 'menu';
   yaw = 0;
   pitch = .34;
   fps = 0;
   frameMs = 0;
-  private ray = new T.Ray();
   private raycaster = new T.Raycaster();
   private desired = new T.Vector3();
   private target = new T.Vector3();
@@ -56,15 +58,16 @@ export class CityView {
     this.settings=settings;
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,settings.quality==='low'?1:1.65));
     this.world.setQuality(settings.quality==='low');
-    this.dockWeather.setQuality(settings.quality==='low');this.forge?.setQuality(settings.quality==='low');this.thread?.setQuality(settings.quality==='low');this.snow?.setQuality(settings.quality==='low');
+    this.dockWeather.setQuality(settings.quality==='low');this.forge?.setQuality(settings.quality==='low');this.thread?.setQuality(settings.quality==='low');this.snow?.setQuality(settings.quality==='low');this.dune?.setQuality(settings.quality==='low');
   }
-  switchCity(city:'dock'|'forge'|'thread'|'snow'):void {
+  switchCity(city:'dock'|'forge'|'thread'|'snow'|'dune'):void {
     this.city=city;
     if(city==='forge'&&!this.forge){this.forge=new PulseWorld();this.forge.setQuality(this.settings.quality==='low');}
     if(city==='thread'&&!this.thread){this.thread=new ThreadWorld();this.thread.setQuality(this.settings.quality==='low');}
     if(city==='snow'&&!this.snow){this.snow=new SnowWorld();this.snow.setQuality(this.settings.quality==='low');}
+    if(city==='dune'&&!this.dune){this.dune=new DuneWorld();this.dune.setQuality(this.settings.quality==='low');}
     this.warmup=true;
-    this.renderer.domElement.setAttribute('aria-label',`${city==='snow'?'雨线城白噪雪原':city==='thread'?'千线程':city==='forge'?'脉冲炉':'指针港'}三维场景；WASD 移动，右键看四周，Q 扫描，E 互动${city==='snow'?'，F 稳身抗风':''}`);
+    this.renderer.domElement.setAttribute('aria-label',`${city==='dune'?'镜库城赤砂档案海':city==='snow'?'雨线城白噪雪原':city==='thread'?'千线程':city==='forge'?'脉冲炉':'指针港'}三维场景；WASD 移动，右键看四周，Q 扫描，E 互动${city==='dune'?'，G 偏振显影，F 稳身':city==='snow'?'，F 稳身抗风':''}`);
   }
   resize(): void {
     this.width=window.innerWidth;this.height=window.innerHeight;
@@ -92,7 +95,7 @@ export class CityView {
   }
   render(dt: number,hero: V3,speed: number,paused: boolean): void {
     this.elapsed+=dt;
-    const active=this.city==='snow'&&this.snow?this.snow:this.city==='thread'&&this.thread?this.thread:this.city==='forge'&&this.forge?this.forge:this.world;
+    const active=this.city==='dune'&&this.dune?this.dune:this.city==='snow'&&this.snow?this.snow:this.city==='thread'&&this.thread?this.thread:this.city==='forge'&&this.forge?this.forge:this.world;
     if(this.city==='thread'&&this.thread)this.thread.weather.weather=this.weather;
     if(this.city==='forge'&&this.forge)this.forge.weather.weather=this.weather;
     active.update(paused?0:dt,hero,paused?0:speed,paused||this.mode==='order'||this.mode==='rail',this.settings.reducedMotion);
@@ -101,6 +104,14 @@ export class CityView {
     if(this.mode==='menu') {
       const drift=this.settings.reducedMotion?0:Math.sin(this.elapsed*.07)*1.8;
       this.desired.set(6+drift,27,55);this.target.set(14,26,-70);
+    } else if(this.mode==='dune-arrival') {
+      this.desired.set(-108,58,159);this.target.set(5,10,-52);
+    } else if(this.mode==='dune-device'&&this.dune) {
+      const p=this.dune.focus;this.desired.set(p.x+26,p.y+21,p.z+27);this.target.set(p.x+2,p.y+3,p.z-4);
+    } else if(this.mode==='dune-audit') {
+      this.desired.set(119,62,-192);this.target.set(30,9,-275);
+    } else if(this.mode==='dune-result') {
+      this.desired.set(133,35,-299);this.target.set(59,-2,-342);
     } else if(this.mode==='snow-arrival') {
       this.desired.set(-141,52,133);this.target.set(-40,8,3);
     } else if(this.mode==='snow-device'&&this.snow) {
@@ -144,20 +155,15 @@ export class CityView {
     } else if(this.mode==='result') {
       this.desired.set(62,37,-57);this.target.set(23,20,-89);
     } else {
-      const distance=this.city==='snow'?(this.width<700?13:11.5):this.width<700?10.5:8.8;
+      const distance=this.city==='dune'?(this.width<700?13:11.8):this.city==='snow'?(this.width<700?13:11.5):this.width<700?10.5:8.8;
       this.target.set(hero.x,hero.y+1.55,hero.z);
       const yaw=this.mode==='ride'?-.75:this.yaw;
       this.desired.set(hero.x+Math.sin(yaw)*distance,hero.y+2.2+Math.sin(this.pitch)*distance,hero.z+Math.cos(yaw)*distance);
-      const direction=this.desired.clone().sub(this.target);const length=direction.length();direction.normalize();
-      this.ray.set(this.target,direction);
-      for(const box of active.solids) {
-        const hit=this.ray.intersectBox(box,new T.Vector3());
-        if(hit) {const d=hit.distanceTo(this.target);if(d<length)this.desired.copy(this.target).addScaledVector(direction,Math.max(1.5,d-.5));}
-      }
+      this.desired.copy(followCameraPosition(this.target,this.desired,active.solids));
     }
     const response=this.warmup?1:1-Math.exp(-dt*(this.settings.reducedMotion?14:5));
     this.camera.position.lerp(this.desired,response);this.look.lerp(this.target,response);this.camera.lookAt(this.look);
-    const fov=this.city==='snow'?67:this.mode==='rail'?53:this.mode==='order'?54:62;
+    const fov=this.city==='snow'||this.city==='dune'?67:this.mode==='rail'?53:this.mode==='order'?54:62;
     if(Math.abs(this.camera.fov-fov)>.01){this.camera.fov=T.MathUtils.damp(this.camera.fov,fov,5,dt);this.camera.updateProjectionMatrix();}
     this.renderer.render(active.scene,this.camera);this.warmup=false;
     this.frames++;this.sampleTime+=dt;

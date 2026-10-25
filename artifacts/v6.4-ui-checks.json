@@ -1,0 +1,443 @@
+{
+  "version": "6.4.0",
+  "date": "2026-10-25",
+  "method": "CUA native keyboard and page controls on production preview; no injected progress, runtime mutation, or hidden teleport",
+  "checks": [
+    {
+      "check": "V6.3 earned snow completion migrates and opens fifth city",
+      "passed": true,
+      "evidence": "Continued the existing normal four-city save; fourth result offers 下一站·赤砂档案海; opening it enters chapter05 without replay or injected progress."
+    },
+    {
+      "check": "Noor conversation unlocks only first incident and journal phase gates",
+      "passed": true,
+      "evidence": "Read two NOOR pages through normal E dialogue; first incident available, all remaining main/side cards gated; no unscanned shuttle."
+    },
+    {
+      "check": "Desert weather buttons and native G polarizer",
+      "passed": true,
+      "evidence": "Switched sun→haze→storm using normal controls. G turns polarizer on, reducing near dust/fog and enabling storm-revealed evidence; HUD remains transparent."
+    },
+    {
+      "check": "DB-01 blind read-then-write produces actual oversell counterexample",
+      "passed": true,
+      "evidence": "DB-01:63 / 完整回归\n↶ 发现反例\n\n可达状态13；终态3；样例售出2，余量-1。要求无超卖、账实一致且可用库存不闲置。\n\n× 库存1 / 2个事务\n可达状态13；终态3；样例售出2，余量-1。要求无超卖、账实一致且可用库存不闲置。\n× 库存2 / 3个事务\n可达状态90；终态19；样例售出3，余量-1。要求无超卖、账实一致且可用库存不闲置。\n× 库存0 / 2个事务\n可达状态13；终态3；样例售出2，余量-2。要求无超卖、账实一致且可用库存不闲置。"
+    },
+    {
+      "check": "DB-01 CAS without retry leaves inventory idle",
+      "passed": true,
+      "evidence": "DB-01:preview / 预演 · 尚未提交\n↶ 发现反例\n\n可达状态98；终态21；样例售出1，余量1。要求无超卖、账实一致且可用库存不闲置。\n\n✓ 库存1 / 2个事务\n可达状态14；终态4；样例售出1，余量0。要求无超卖、账实一致且可用库存不闲置。\n× 库存2 / 3个事务\n可达状态98；终态21；样例售出1，余量1。要求无超卖、账实一致且可用库存不闲置。\n✓ 库存0 / 2个事务\n可达状态9；终态1；样例售出0，余量0。要求无超卖、账实一致且可用库存不闲置。"
+    },
+    {
+      "check": "DB-01 CAS with write guard and full retry passes enumerated states",
+      "passed": true,
+      "evidence": "DB-01:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n所有已枚举交错均不超卖，订单与库存一致，可用库存得到服务。\n\n✓ 库存1 / 2个事务\n可达状态18；终态4；样例售出1，余量0。要求无超卖、账实一致且可用库存不闲置。\n✓ 库存2 / 3个事务\n可达状态239；终态36；样例售出2，余量0。要求无超卖、账实一致且可用库存不闲置。\n✓ 库存0 / 2个事务\n可达状态9；终态1；样例售出0，余量0。要求无超卖、账实一致且可用库存不闲置。"
+    },
+    {
+      "check": "Native Tab and Escape inside controls preserve game focus",
+      "passed": true,
+      "evidence": "Tab from inventory select focuses dune-control-guard; native Escape closes the editor; E reopens it normally."
+    },
+    {
+      "check": "Successful preview does not save inventory draft",
+      "passed": true,
+      "evidence": "After successful CAS preview, closing and reopening restores original blind mode and both unchecked flags; first incident remains active."
+    },
+    {
+      "check": "Atomic conditional subtraction is a valid alternative without CAS retry",
+      "passed": true,
+      "evidence": "DB-01:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n所有已枚举交错均不超卖，订单与库存一致，可用库存得到服务。\n\n✓ 库存1 / 2个事务\n可达状态14；终态4；样例售出1，余量0。要求无超卖、账实一致且可用库存不闲置。\n✓ 库存2 / 3个事务\n可达状态98；终态27；样例售出2，余量0。要求无超卖、账实一致且可用库存不闲置。\n✓ 库存0 / 2个事务\n可达状态9；终态1；样例售出0，余量0。要求无超卖、账实一致且可用库存不闲置。"
+    },
+    {
+      "check": "First mirror bridge is crossed with normal movement after inventory commit",
+      "passed": true,
+      "evidence": "Walked east across the actual newly opened45m bridge from DB-01 to DB-02, then Q/E acquired the new incident; no teleport or injected state."
+    },
+    {
+      "check": "DB-02 original payload idempotency reproduces duplicate and merged orders",
+      "passed": true,
+      "evidence": "DB-02:65 / 完整回归\n↶ 发现反例\n\nr-7记账3次\n\n× 同请求并发只记一笔\nr-7记账3次\n× 内容相同的独立请求都保留\nr-8记账0次\n× 重试取得原结果\n首次receipt-1 / 重试receipt-2\n× 同键不同载荷拒绝\n载荷变化返回receipt-3，要求409"
+    },
+    {
+      "check": "DB-02 unique request key still needs original response and payload conflict handling",
+      "passed": true,
+      "evidence": "DB-02:preview / 预演 · 尚未提交\n↶ 发现反例\n\n首次receipt-1 / 重试NO_RESULT\n\n✓ 同请求并发只记一笔\nr-7记账1次\n✓ 内容相同的独立请求都保留\nr-8记账1次\n× 重试取得原结果\n首次receipt-1 / 重试NO_RESULT\n× 同键不同载荷拒绝\n载荷变化返回NO_RESULT，要求409"
+    },
+    {
+      "check": "DB-02 stable key unique constraint saved result and fingerprint pass",
+      "passed": true,
+      "evidence": "DB-02:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n请求ID的唯一约束、事务内业务写入、原结果重放与载荷冲突校验共同通过。\n\n✓ 同请求并发只记一笔\nr-7记账1次\n✓ 内容相同的独立请求都保留\nr-8记账1次\n✓ 重试取得原结果\n首次receipt-1 / 重试receipt-1\n✓ 同键不同载荷拒绝\n载荷变化返回409，要求409"
+    },
+    {
+      "check": "Fifth-city committed repairs survive reload and unlock only eligible followup",
+      "passed": true,
+      "evidence": "Reload/continue restores DB-03 objective at visible minimap(55,92); DB-01 and DB-02 repaired, DB-S1 available but buried; later main/side incidents remain gated."
+    },
+    {
+      "check": "North mirror ramp is walked without jumping to the raised view platform",
+      "passed": true,
+      "evidence": "Walked north from billing through the actual54m slope rising8m to DB-03, then normal Q/E interaction opened the snapshot incident."
+    },
+    {
+      "check": "DB-03 statement-level committed reads form torn views",
+      "passed": true,
+      "evidence": "DB-03:67 / 完整回归\n↶ 发现反例\n\nsource=100, target=140，合计240/200；本关读取由两条SELECT组成\n\n× 两条SELECT之间发生转账\nsource=100, target=140，合计240/200；本关读取由两条SELECT组成\n✓ 尚未提交的转账随后回滚\nsource=100, target=100，合计200/200；本关读取由两条SELECT组成\n× 两份副本处于不同版本\nsource=60, target=100，合计160/200；本关读取由两条SELECT组成"
+    },
+    {
+      "check": "DB-03 transaction snapshot still fails when switching replicas",
+      "passed": true,
+      "evidence": "DB-03:preview / 预演 · 尚未提交\n↶ 发现反例\n\nsource=60, target=100，合计160/200；本关读取由两条SELECT组成\n\n✓ 两条SELECT之间发生转账\nsource=100, target=100，合计200/200；本关读取由两条SELECT组成\n✓ 尚未提交的转账随后回滚\nsource=100, target=100，合计200/200；本关读取由两条SELECT组成\n× 两份副本处于不同版本\nsource=60, target=100，合计160/200；本关读取由两条SELECT组成"
+    },
+    {
+      "check": "DB-03 shared snapshot and pinned source preserve complete view",
+      "passed": true,
+      "evidence": "DB-03:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n两条SELECT共享事务快照，并固定同一数据源；视图内部约束保持一致。\n\n✓ 两条SELECT之间发生转账\nsource=100, target=100，合计200/200；本关读取由两条SELECT组成\n✓ 尚未提交的转账随后回滚\nsource=100, target=100，合计200/200；本关读取由两条SELECT组成\n✓ 两份副本处于不同版本\nsource=60, target=140，合计200/200；本关读取由两条SELECT组成"
+    },
+    {
+      "check": "Buried cache evidence is refused in sun",
+      "passed": true,
+      "evidence": "Re-entered from earned DB-03 checkpoint, aligned to visible side-bridge center before walking east to DB-S1. Q in sun retains scan-required prompt at the correct device."
+    },
+    {
+      "check": "Polarizer alone does not bypass storm requirement",
+      "passed": true,
+      "evidence": "At actual DB-S1, native G on + Q in sun still refuses evidence."
+    },
+    {
+      "check": "Storm alone does not bypass polarizer requirement",
+      "passed": true,
+      "evidence": "At DB-S1 in storm with G off, Q retains scan-required prompt."
+    },
+    {
+      "check": "Storm plus polarizer actually unlocks buried cache evidence",
+      "passed": true,
+      "evidence": "G on + storm + native Q reveals evidence and changes prompt to 检查; original false reports were retried after aligning the bridge approach and reaching the intended device."
+    },
+    {
+      "check": "Follow camera avoids the actual tall mirror pillar",
+      "passed": true,
+      "evidence": "After adding authored pillar solids and nearest-hit clipping, revisited visible minimap(82,-17.8); follow view shows avatar/bridge and skyline instead of being filled by the pillar. Added three geometry regression tests."
+    },
+    {
+      "check": "DB-S1 TTL-only cache admits stale refill and hides new record",
+      "passed": true,
+      "evidence": "DB-S1:69 / 完整回归\n↶ 发现反例\n\n数据库v8；读到v7；慢查询带token=8,当前=8\n\n× 慢回填不能覆盖新值\n数据库v8；读到v7；慢查询带token=8,当前=8\n× 新建记录不被旧404遮住\n负缓存30秒；第6秒必须看见新记录"
+    },
+    {
+      "check": "DB-S1 fence before database commit still accepts old refill",
+      "passed": true,
+      "evidence": "DB-S1:preview / 预演 · 尚未提交\n↶ 发现反例\n\n数据库v8；读到v7；慢查询带token=8,当前=8\n\n× 慢回填不能覆盖新值\n数据库v8；读到v7；慢查询带token=8,当前=8\n✓ 新建记录不被旧404遮住\n负缓存3秒；第6秒必须看见新记录"
+    },
+    {
+      "check": "DB-S1 versioned key is a valid alternative without invalidation recipe",
+      "passed": true,
+      "evidence": "DB-S1:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n版本化键或正确失效后的代次栅栏阻止旧回填；负缓存保留短有效期。\n\n✓ 慢回填不能覆盖新值\n数据库v8；读到v8；慢查询带token=8,当前=8\n✓ 新建记录不被旧404遮住\n负缓存3秒；第6秒必须看见新记录"
+    },
+    {
+      "check": "DB-S1 post-commit generation fence and short negative cache pass",
+      "passed": true,
+      "evidence": "DB-S1:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n版本化键或正确失效后的代次栅栏阻止旧回填；负缓存保留短有效期。\n\n✓ 慢回填不能覆盖新值\n数据库v8；读到v8；慢查询带token=7,当前=8\n✓ 新建记录不被旧404遮住\n负缓存3秒；第6秒必须看见新记录"
+    },
+    {
+      "check": "Optional cache repair leaves the main recovery stage intact",
+      "passed": true,
+      "evidence": "After DB-S1 submit: count4/10, main still DB-04; no main advance or reset."
+    },
+    {
+      "check": "Sandstorm moves an exposed traveler and held F resists drift",
+      "passed": true,
+      "evidence": "{\"start\":{\"x\":1.8820091401754533,\"z\":-18.052101223732862},\"heldF\":{\"x\":2.1942353435301625,\"z\":-18.136539309110553},\"unbraced\":{\"x\":5.692609311781367,\"z\":-19.36301586091602},\"bracedDrift\":0.32344240959334086,\"plainDrift\":3.707137056255987,\"method\":\"native2secF then2secidleShift on exposed main mirror bridge; live minimap coordinates\"}"
+    },
+    {
+      "check": "DB-04 crash recovery checks durability and committed identity",
+      "passed": true,
+      "evidence": "DB-04:71 / 完整回归\n↶ 发现反例\n\n已确认真值40；恢复值0；磁盘WAL到LSN0；未提交应用0；丢失已确认提交1\n\n× 确认后立刻断电\n已确认真值40；恢复值0；磁盘WAL到LSN0；未提交应用0；丢失已确认提交1\n× 尾部留下未提交记录\n已确认真值49；恢复值49；磁盘WAL到LSN3；未提交应用1；丢失已确认提交1\n× 旧检查点与重复重放\n已确认真值49；恢复值138；磁盘WAL到LSN3；未提交应用2；丢失已确认提交1"
+    },
+    {
+      "check": "DB-04 flush plus committed replay still duplicates checkpointed redo without pageLSN",
+      "passed": true,
+      "evidence": "DB-04:preview / 预演 · 尚未提交\n↶ 发现反例\n\n已确认真值49；恢复值138；磁盘WAL到LSN5；未提交应用0；丢失已确认提交0\n\n✓ 确认后立刻断电\n已确认真值40；恢复值40；磁盘WAL到LSN2；未提交应用0；丢失已确认提交0\n✓ 尾部留下未提交记录\n已确认真值49；恢复值49；磁盘WAL到LSN5；未提交应用0；丢失已确认提交0\n× 旧检查点与重复重放\n已确认真值49；恢复值138；磁盘WAL到LSN5；未提交应用0；丢失已确认提交0"
+    },
+    {
+      "check": "DB-04 flush committed-only replay and pageLSN restore exactly49",
+      "passed": true,
+      "evidence": "DB-04:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n成功确认前刷盘，仅重放已提交事务，并用pageLSN跳过已应用日志。\n\n✓ 确认后立刻断电\n已确认真值40；恢复值40；磁盘WAL到LSN2；未提交应用0；丢失已确认提交0\n✓ 尾部留下未提交记录\n已确认真值49；恢复值49；磁盘WAL到LSN5；未提交应用0；丢失已确认提交0\n✓ 旧检查点与重复重放\n已确认真值49；恢复值49；磁盘WAL到LSN5；未提交应用0；丢失已确认提交0"
+    },
+    {
+      "check": "Archivist NPC provides contextual dialogue without advancing main incidents",
+      "passed": true,
+      "evidence": "Walked to SAFFRON on raised WAL platform, read both snapshot/WAL pages; migration remains current main stage."
+    },
+    {
+      "check": "DB-S2 default leaks connections and permits ghost writes",
+      "passed": true,
+      "evidence": "DB-S2:73 / 完整回归\n↶ 发现反例\n\n完成4/6；仍占用3连接\n\n× 所有路径归还连接\n完成4/6；仍占用3连接\n× 超时之后没有幽灵写入\n响应超时后继续写入2次\n× 并发与排队都在预算内\n连接拒绝22次；完成耗时0/12周期"
+    },
+    {
+      "check": "DB-S2 finally and capped concurrency do not cancel timed-out SQL",
+      "passed": true,
+      "evidence": "DB-S2:preview / 预演 · 尚未提交\n↶ 发现反例\n\n响应超时后继续写入2次\n\n✓ 所有路径归还连接\n完成6/6；仍占用0连接\n× 超时之后没有幽灵写入\n响应超时后继续写入2次\n✓ 并发与排队都在预算内\n连接拒绝0次；完成耗时11/12周期"
+    },
+    {
+      "check": "DB-S2 finally cancellation and concurrency two meet pool budgets",
+      "passed": true,
+      "evidence": "DB-S2:preview / 预演 · 尚未提交\n✓ 不变量通过\n\nfinally归还、取消传播与有界并发让六个请求在预算内收尾。\n\n✓ 所有路径归还连接\n完成6/6；仍占用0连接\n✓ 超时之后没有幽灵写入\n响应超时后继续写入0次\n✓ 并发与排队都在预算内\n连接拒绝0次；完成耗时8/12周期"
+    },
+    {
+      "check": "Global pause freezes the current production incident replay",
+      "passed": true,
+      "evidence": "Before pause: DB-S2:preview / 1 OF 12; after independent tests and audit: DB-S2:preview / 1 OF 12"
+    },
+    {
+      "check": "Resume keeps the same trace and allows the next step",
+      "passed": true,
+      "evidence": "DB-S2:preview / 2 OF 12"
+    },
+    {
+      "check": "DB-S2 serializing everything violates the completion deadline",
+      "passed": true,
+      "evidence": "DB-S2:preview / 预演 · 尚未提交\n↶ 发现反例\n\n连接拒绝0次；完成耗时14/12周期\n\n✓ 所有路径归还连接\n完成6/6；仍占用0连接\n✓ 超时之后没有幽灵写入\n响应超时后继续写入0次\n× 并发与排队都在预算内\n连接拒绝0次；完成耗时14/12周期"
+    },
+    {
+      "check": "DB-S2 concurrency three also satisfies measured constraints",
+      "passed": true,
+      "evidence": "DB-S2:preview / 预演 · 尚未提交\n✓ 不变量通过\n\nfinally归还、取消传播与有界并发让六个请求在预算内收尾。\n\n✓ 所有路径归还连接\n完成6/6；仍占用0连接\n✓ 超时之后没有幽灵写入\n响应超时后继续写入0次\n✓ 并发与排队都在预算内\n连接拒绝0次；完成耗时5/12周期"
+    },
+    {
+      "check": "Sun exposure raises visible heat without health loss",
+      "passed": true,
+      "evidence": "On exposed main mirror bridge the live air HUD rose from0% after storm to62% in sun; shade/sandstorm removal and bounded movement penalties are separately covered by domain/layout tests. No health or retry penalty."
+    },
+    {
+      "check": "Descending mirror ramp reaches the live migration site without jumping",
+      "passed": true,
+      "evidence": "Walked north from raised WAL platform along the actual56m descending ramp to DB-05,8m lower; normal Q/E acquired incident."
+    },
+    {
+      "check": "DB-05 drop-first offset migration breaks old clients and misses rows",
+      "passed": true,
+      "evidence": "DB-05:75 / 完整回归\n↶ 发现反例\n\n扩展后双字段并存；所有旧客户端退出且核验完成，才允许收缩\n\n× 旧客户端继续工作\n扩展后双字段并存；所有旧客户端退出且核验完成，才允许收缩\n× 删除不让分页漏行\n回填4/5行\n× 回填期间写入不丢失\nid2: old=oasis-v2,new=city-2；id3: old=city-3,new=null"
+    },
+    {
+      "check": "DB-05 compatible dual writes still skip a row with offset pagination",
+      "passed": true,
+      "evidence": "DB-05:preview / 预演 · 尚未提交\n↶ 发现反例\n\n回填4/5行\n\n✓ 旧客户端继续工作\n扩展后双字段并存；所有旧客户端退出且核验完成，才允许收缩\n× 删除不让分页漏行\n回填4/5行\n× 回填期间写入不丢失\nid3: old=city-3,new=null"
+    },
+    {
+      "check": "DB-05 keyset backfill alone loses updates to an already copied row",
+      "passed": true,
+      "evidence": "DB-05:preview / 预演 · 尚未提交\n↶ 发现反例\n\nid2: old=oasis-v2,new=city-2\n\n✓ 旧客户端继续工作\n扩展后双字段并存；所有旧客户端退出且核验完成，才允许收缩\n✓ 删除不让分页漏行\n回填5/5行\n× 回填期间写入不丢失\nid2: old=oasis-v2,new=city-2"
+    },
+    {
+      "check": "DB-05 expand keyset dual write and contract gate complete live migration",
+      "passed": true,
+      "evidence": "DB-05:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n扩展→主键游标回填→持续双写→核验并等待旧客户端退出→收缩。\n\n✓ 旧客户端继续工作\n扩展后双字段并存；所有旧客户端退出且核验完成，才允许收缩\n✓ 删除不让分页漏行\n回填5/5行\n✓ 回填期间写入不丢失\n所有存活行的新旧字段一致"
+    },
+    {
+      "check": "DB-S3 original import duplicates rows loses latest data and leaves partial batch",
+      "passed": true,
+      "evidence": "DB-S3:77 / 完整回归\n↶ 发现反例\n\n有效行5/3；001与1必须是两个人，同名也不能合并\n\n× 外部主键不能数值化\n有效行5/3；001与1必须是两个人，同名也不能合并\n× 重放不重复且旧版本不覆盖\n001当前city=north，要求east/v3\n× 坏批次不留下半份导入\n一好一坏的批次留下1行；要求先校验整批并原子提交"
+    },
+    {
+      "check": "DB-S3 numeric ID coercion still merges001 and1 despite upsert safeguards",
+      "passed": true,
+      "evidence": "DB-S3:preview / 预演 · 尚未提交\n↶ 发现反例\n\n有效行2/3；001与1必须是两个人，同名也不能合并\n\n× 外部主键不能数值化\n有效行2/3；001与1必须是两个人，同名也不能合并\n✓ 重放不重复且旧版本不覆盖\n001当前city=east，要求east/v3\n✓ 坏批次不留下半份导入\n一好一坏的批次留下0行；要求先校验整批并原子提交"
+    },
+    {
+      "check": "DB-S3 late v2 overwrites v3 without source-version guard",
+      "passed": true,
+      "evidence": "DB-S3:preview / 预演 · 尚未提交\n↶ 发现反例\n\n001当前city=stale，要求east/v3\n\n✓ 外部主键不能数值化\n有效行3/3；001与1必须是两个人，同名也不能合并\n× 重放不重复且旧版本不覆盖\n001当前city=stale，要求east/v3\n✓ 坏批次不留下半份导入\n一好一坏的批次留下0行；要求先校验整批并原子提交"
+    },
+    {
+      "check": "DB-S3 invalid batch exposes a partial first row outside atomic validation",
+      "passed": true,
+      "evidence": "DB-S3:preview / 预演 · 尚未提交\n↶ 发现反例\n\n一好一坏的批次留下1行；要求先校验整批并原子提交\n\n✓ 外部主键不能数值化\n有效行3/3；001与1必须是两个人，同名也不能合并\n✓ 重放不重复且旧版本不覆盖\n001当前city=east，要求east/v3\n× 坏批次不留下半份导入\n一好一坏的批次留下1行；要求先校验整批并原子提交"
+    },
+    {
+      "check": "DB-S3 string identity upsert version guard and whole-batch transaction pass",
+      "passed": true,
+      "evidence": "DB-S3:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n保留外部字符串ID、按主键upsert、版本守卫及整批校验/事务通过。\n\n✓ 外部主键不能数值化\n有效行3/3；001与1必须是两个人，同名也不能合并\n✓ 重放不重复且旧版本不覆盖\n001当前city=east，要求east/v3\n✓ 坏批次不留下半份导入\n一好一坏的批次留下0行；要求先校验整批并原子提交"
+    },
+    {
+      "check": "DB-06 direct dual write loses notifications across concrete crash windows",
+      "passed": true,
+      "evidence": "DB-06:79 / 完整回归\n↶ 发现反例\n\n0副本；业务0/1次；未确认\n\n× 数据库提交后进程崩溃\n0副本；业务0/1次；未确认\n× 消息已发出但确认丢失\n1副本；业务1/1次；未确认\n× 消费者确认后才崩溃\n0副本；业务0/1次；未确认"
+    },
+    {
+      "check": "DB-06 outbox retry still needs consumer dedup and commit-before-ACK",
+      "passed": true,
+      "evidence": "DB-06:preview / 预演 · 尚未提交\n↶ 发现反例\n\n2副本；业务2/1次；已确认\n\n✓ 数据库提交后进程崩溃\n1副本；业务1/1次；已确认\n× 消息已发出但确认丢失\n2副本；业务2/1次；已确认\n× 消费者确认后才崩溃\n0副本；业务0/1次；未确认"
+    },
+    {
+      "check": "DB-06 transactional outbox retry consumer idempotency and after-commit ACK pass",
+      "passed": true,
+      "evidence": "DB-06:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n同事务outbox、可重试投递、消费端事件去重与提交后确认共同通过。\n\n✓ 数据库提交后进程崩溃\n1副本；业务1/1次；已确认\n✓ 消息已发出但确认丢失\n2副本；业务1/1次；已确认\n✓ 消费者确认后才崩溃\n1副本；业务1/1次；已确认"
+    },
+    {
+      "check": "Courier NPC explains cross-city delivery and keeps integration stage",
+      "passed": true,
+      "evidence": "Walked to KITE near outbox platform and read both contextual dialogue pages; no phase skip or reset."
+    },
+    {
+      "check": "Six data repairs and fourth-city reliable message policy pass cross-city integration",
+      "passed": true,
+      "evidence": "Walked actual north mirror bridge to on-call station, E ran six committed data models plus prior NET-02; seven-system integration passed and storm load was forced."
+    },
+    {
+      "check": "Canary rehearsal weather lock also rejects native T shortcut",
+      "passed": true,
+      "evidence": "After integration, normal weather buttons disabled; native T reports final load lock and storm remains selected."
+    },
+    {
+      "check": "On-call release exercise disables all previously earned skiff shortcuts",
+      "passed": true,
+      "evidence": "[{\"disabled\":true,\"id\":\"DB-01\"},{\"disabled\":true,\"id\":\"DB-02\"},{\"disabled\":true,\"id\":\"DB-03\"},{\"disabled\":true,\"id\":\"DB-04\"},{\"disabled\":true,\"id\":\"DB-05\"},{\"disabled\":true,\"id\":\"DB-06\"},{\"disabled\":true,\"id\":\"DB-S1\"},{\"disabled\":true,\"id\":\"DB-S2\"},{\"disabled\":true,\"id\":\"DB-S3\"}]"
+    },
+    {
+      "check": "Bad canary default full traffic and HTTP-only monitoring cannot earn cutover",
+      "passed": true,
+      "evidence": "CANARY:82 / 完整回归\n↶ 发现反例\n\nr42接收100%试验流量；要求≤10%\n\n× 控制故障爆炸半径\nr42接收100%试验流量；要求≤10%\n× 200不代表业务完整\nr42业务回归失败；只看HTTP，故障没有被看见\n× 故障自动回滚\n坏版本仍然留在流量路径中"
+    },
+    {
+      "check": "Five-percent traffic alone still hides real data loss behind HTTP200",
+      "passed": true,
+      "evidence": "CANARY:preview / 预演 · 尚未提交\n↶ 发现反例\n\nr42业务回归失败；只看HTTP，故障没有被看见\n\n✓ 控制故障爆炸半径\nr42接收5%试验流量；要求≤10%\n× 200不代表业务完整\nr42业务回归失败；只看HTTP，故障没有被看见\n× 故障自动回滚\n坏版本仍然留在流量路径中"
+    },
+    {
+      "check": "Detecting canary failure still requires rollback",
+      "passed": true,
+      "evidence": "CANARY:preview / 预演 · 尚未提交\n↶ 发现反例\n\n坏版本仍然留在流量路径中\n\n✓ 控制故障爆炸半径\nr42接收5%试验流量；要求≤10%\n✓ 200不代表业务完整\nr42业务回归失败；监控发现数据库/通知不一致\n× 故障自动回滚\n坏版本仍然留在流量路径中"
+    },
+    {
+      "check": "Controlled canary detects concrete outbox regression and rolls back r42",
+      "passed": true,
+      "evidence": "CANARY:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n坏版本被识别并自动回滚。已提交的修复r43才获得正式切换资格。\n\n✓ 控制故障爆炸半径\nr42接收5%试验流量；要求≤10%\n✓ 200不代表业务完整\nr42业务回归失败；监控发现数据库/通知不一致\n✓ 故障自动回滚\nr42流量回到0%，r41继续服务"
+    },
+    {
+      "check": "Successful canary preview does not open the deployment ramp or save the plan",
+      "passed": true,
+      "evidence": "After passing preview, close/reopen still requires rehearsal; slider restored100, HTTP monitor selected and rollback unchecked. Only formal回归 commits a plan."
+    },
+    {
+      "check": "Passed canary plan survives reload and restores descent checkpoint",
+      "passed": true,
+      "evidence": "Committed5% / invariants / rollback plan, reloaded and continued normally; new objective is16m archive descent, checkpoint at on-call station; storm remains locked."
+    },
+    {
+      "check": "Final16m archive descent is physically walked before cutover",
+      "passed": true,
+      "evidence": "Enabled normal F bracing and G lens, walked north down the actual72m ramp into the below-ground archive platform, reached native E cutover prompt; no teleport or skipped traversal."
+    },
+    {
+      "check": "Main ending requires six repairs integration rehearsal and actual r43 handoff",
+      "passed": true,
+      "evidence": "Normal final E commit leads to200OK,6/6 main,3/4 side,r43 verified cutover; one optional metrics followup intentionally remains."
+    },
+    {
+      "check": "After ending weather becomes free while missing followup remains accessible",
+      "passed": true,
+      "evidence": "After verified r43 cutover, sun button enabled and selectable; result explicitly retains one unfinished followup."
+    },
+    {
+      "check": "DB-S4 mean and missing errors hide real reservation tail latency",
+      "passed": true,
+      "evidence": "DB-S4:84 / 完整回归\n↶ 发现反例\n\n预约观测16.3ms；阈值500ms，不能被大量health请求稀释\n\n× 按路由发现预约尾延迟\n预约观测16.3ms；阈值500ms，不能被大量health请求稀释\n× 桶计数合并包含失败请求\n观测所在桶16.3ms；全样本p99所在桶3000ms；桶边界近似，不冒充精确分位数"
+    },
+    {
+      "check": "DB-S4 averaging node p99 gives2250 instead of merged3000 bucket",
+      "passed": true,
+      "evidence": "DB-S4:preview / 预演 · 尚未提交\n↶ 发现反例\n\n观测所在桶2250.0ms；全样本p99所在桶3000ms；桶边界近似，不冒充精确分位数\n\n✓ 按路由发现预约尾延迟\n预约观测2250.0ms；阈值500ms，不能被大量health请求稀释\n× 桶计数合并包含失败请求\n观测所在桶2250.0ms；全样本p99所在桶3000ms；桶边界近似，不冒充精确分位数"
+    },
+    {
+      "check": "DB-S4 merged histogram still underreports when timeouts disappear",
+      "passed": true,
+      "evidence": "DB-S4:preview / 预演 · 尚未提交\n↶ 发现反例\n\n观测所在桶1500.0ms；全样本p99所在桶3000ms；桶边界近似，不冒充精确分位数\n\n✓ 按路由发现预约尾延迟\n预约观测1500.0ms；阈值500ms，不能被大量health请求稀释\n× 桶计数合并包含失败请求\n观测所在桶1500.0ms；全样本p99所在桶3000ms；桶边界近似，不冒充精确分位数"
+    },
+    {
+      "check": "DB-S4 global health traffic dilutes reservation incidents",
+      "passed": true,
+      "evidence": "DB-S4:preview / 预演 · 尚未提交\n↶ 发现反例\n\n预约观测25.0ms；阈值500ms，不能被大量health请求稀释\n\n× 按路由发现预约尾延迟\n预约观测25.0ms；阈值500ms，不能被大量health请求稀释\n× 桶计数合并包含失败请求\n观测所在桶25.0ms；全样本p99所在桶3000ms；桶边界近似，不冒充精确分位数"
+    },
+    {
+      "check": "DB-S4 per-route merged bucket counts including errors show real tail",
+      "passed": true,
+      "evidence": "DB-S4:preview / 预演 · 尚未提交\n✓ 不变量通过\n\n按路由合并直方图桶计数，纳入超时错误，尾延迟得以被看见。\n\n✓ 按路由发现预约尾延迟\n预约观测3000.0ms；阈值500ms，不能被大量health请求稀释\n✓ 桶计数合并包含失败请求\n观测所在桶3000.0ms；全样本p99所在桶3000ms；桶边界近似，不冒充精确分位数"
+    },
+    {
+      "check": "Last optional metrics repair after cutover preserves completed main ending",
+      "passed": true,
+      "evidence": "After verified r43 main ending, manually reached DB-S4, acquired storm/lens evidence and submitted repair. Main remains complete; total10/10."
+    },
+    {
+      "check": "All ten repairs and verified r43 ending survive a full reload",
+      "passed": true,
+      "evidence": "Reloaded completed ten-case save through normal continue; core checkpoint restored and result shows6/6,4/4,r43 plus full-story text."
+    },
+    {
+      "check": "Fourth-city replay retains proven fifth-city entry and complete progress",
+      "passed": true,
+      "evidence": "Replayed fourth city to0/8 through its result button, city map still enabled fifth via validated SnowClearance. Entered fifth and reloaded normally: six main,four followups,r43 all retained."
+    },
+    {
+      "check": "All five city round trips preserve records and independent weather controls",
+      "passed": true,
+      "evidence": "Travelled dune→dock→forge→thread→snow→dune three times through normal maps. Old cities restore their weather controls; replaying second,third,fourth states retain onward certificates; fifth remains10/10."
+    },
+    {
+      "check": "Cached five-scene rendering avoids repeated geometry growth in short round trips",
+      "passed": true,
+      "evidence": "{\"warm\":\"131 FPS / 7.7 ms 54 draws · 30.7k tris 811 geom · 78 tex\",\"subsequent\":[\"144 FPS / 6.9 ms 54 draws · 30.7k tris 811 geom · 78 tex\",\"131 FPS / 7.6 ms 54 draws · 30.7k tris 811 geom · 78 tex\"],\"limit\":\"Short browser render-counter check, not heap/VRAM soak or a universal FPS claim.\"}"
+    },
+    {
+      "check": "390×844 incident journal scrolls all ten stories, keeps close reachable, and has no horizontal overflow",
+      "passed": true,
+      "evidence": "Single-column cards and 44px controls; native scroll reaches city-map footer, sticky 44px close stays at top; document width390."
+    },
+    {
+      "check": "390×844 workbench supports native selects, scrollable counterexample, draft discard, and fixed 44px verification footer",
+      "passed": true,
+      "evidence": "DB-S4 mean164.1ms preview fails without committing; close/reopen restores histogram; correct preview reports3000ms upper bucket. Fixed bottom controls remain visible."
+    },
+    {
+      "check": "390×844 native touch stick moves the player, polarizer and brace toggle independently, and interaction target avoids overlap",
+      "passed": true,
+      "evidence": "Pointer-held joystick1.8s changes visible goal distance233m→226m; G/F aria-pressed=true; interaction44px ends597px before brace starts604px; jump starts674px."
+    },
+    {
+      "check": "390×844 low quality and reduced motion apply and retain ten completed cases",
+      "passed": true,
+      "evidence": "Low/reduced native settings reopen as low/true with sound=false; city remains6/6+4/4, then restored high/false. Browser viewport QA, not physical-phone performance certification."
+    },
+    {
+      "check": "390×844 ten-case ending keeps all actions reachable and uses 44px touch targets",
+      "passed": true,
+      "evidence": "6/6 main,4/4 side,r43 persisted after full page reload; native scroll reaches replay/future-city footer without horizontal overflow."
+    },
+    {
+      "check": "Replaying canary preserves all ten repairs and the completed well walls leave the physical descent traversable",
+      "passed": true,
+      "evidence": "Replay starts at(65,-231), G/F on; native W14s+15s reaches(66.58,-343.87); visible E cutover r43 succeeds again and6/6+4/4 remains. No teleport or injected progress."
+    },
+    {
+      "check": "Current help includes desert polarizer and both weather brace controls",
+      "passed": true,
+      "evidence": "Help visibly lists G沙漠偏振显影、F风雪/沙漠稳身、M任务册/故障簿."
+    },
+    {
+      "check": "Main menu and about screen describe five cities and preserve complete fifth-city continuation",
+      "passed": true,
+      "evidence": "About visibly includes 赤砂档案海、六主线四故障、G/F、16米档案井与其余三城; return menu→continue restores6/6+4/4 r43 ending."
+    }
+  ],
+  "finalConsoleErrors": [],
+  "viewportChecks": [
+    "1280x720",
+    "390x844"
+  ],
+  "sourceFingerprint": "63fbbd0c5ef425bb710680816ae3316da2ee7890fd1313046aae7bb7c5d39d05",
+  "review": "docs/v6/DUNE_REVIEW.md",
+  "buildAssets": [
+    "assets/index-CMk0ywfE.js",
+    "assets/index-BbYcMD6n.css"
+  ]
+}

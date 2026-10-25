@@ -4,7 +4,7 @@
 
 截图日期：2026-10-24。首城原截图基线为 V6 `332406d`；`10-finish.jpg` 和首页封面已更新到 V6.1 两城版，显示新的城际入口。所有图片使用本地生产构建。工作台的滚动位置因讲解按钮不同。
 
-当前游戏为 V6.3 四城版。前三城图片保留各自验收时的历史版本；旧截图中 2/8、3/8 的计数不表示当前开放数量。第四城的图文与最终四城地图在 `snow/`，详见下表。
+当前游戏为V6.4五城版。前四城图片保留各自验收时的历史版本；旧截图中2/8、3/8、4/8的计数不表示当前开放数量。第五城图文及最终五城地图在 `dune/`，详见下表。
 
 | 文件 | 说明 |
 | --- | --- |
@@ -83,3 +83,46 @@ V6.3 第四城截图日期为 2026-10-25，保存在 `snow/`。全部来自生�
 | [31-transparent-hud-mobile.jpg](snow/31-transparent-hud-mobile.jpg) | 同一透明提示在390×844手机视口的效果 |
 
 第四城任务提示已按反馈改成透明悬浮文字。前29张图保留开发验收时的画面，30–31为这次样式微调后的截图。
+
+
+V6.4第五城截图日期为2026-10-25，保存在 `dune/`。37张均通过生产构建的正常UI取得：亲自走到新设施Q取证、原生工作台验证、已取证站点正式沙舟接驳、WASD/F走入档案井，未注入进度或调用隐藏传送。早期图有实时性能小窗；最终封面与手机图已移除。34–37为390×844浏览器视口，不能当成手机硬件性能结果。
+
+| 文件 | 说明 |
+| --- | --- |
+| [01-desert.jpg](dune/01-desert.jpg) | 赤砂市集、青蓝镜面步道与平顶砂岩 |
+| [02-sandstorm.jpg](dune/02-sandstorm.jpg) | 沙尘暴遮蔽和横风环境 |
+| [03-polarizer.jpg](dune/03-polarizer.jpg) | 开启G偏振镜后的可读性 |
+| [04-incident-book.jpg](dune/04-incident-book.jpg) | 初入城故障簿及阶段门 |
+| [05-stock-error.jpg](dune/05-stock-error.jpg) | 旧值覆盖的库存反例 |
+| [06-stock-proof.jpg](dune/06-stock-proof.jpg) | CAS重读重试的有效替代解 |
+| [07-mirror-crossing.jpg](dune/07-mirror-crossing.jpg) | 第一条实体镜面通道 |
+| [08-billing-error.jpg](dune/08-billing-error.jpg) | 按正文去重/无唯一约束的错误 |
+| [09-billing-proof.jpg](dune/09-billing-proof.jpg) | 请求ID、唯一约束、原结果与载荷冲突 |
+| [10-ascent-ramp.jpg](dune/10-ascent-ramp.jpg) | 北向8米上坡 |
+| [11-snapshot-proof.jpg](dune/11-snapshot-proof.jpg) | 三种现场的一致视图 |
+| [12-buried-archive.jpg](dune/12-buried-archive.jpg) | 沙尘暴中偏振显影的地下档案 |
+| [13-cache-proof.jpg](dune/13-cache-proof.jpg) | 代次栅栏和短负缓存 |
+| [14-wal-error.jpg](dune/14-wal-error.jpg) | 异步确认、缺失提交身份的错误 |
+| [15-wal-proof.jpg](dune/15-wal-proof.jpg) | 刷盘、提交过滤、pageLSN与重复恢复 |
+| [16-pool-proof.jpg](dune/16-pool-proof.jpg) | finally归还、查询取消与并发预算 |
+| [17-migration-descent.jpg](dune/17-migration-descent.jpg) | 回迁移工地的8米下坡 |
+| [18-migration-proof.jpg](dune/18-migration-proof.jpg) | 兼容阶段、游标分页、双写与收缩 |
+| [19-import-error.jpg](dune/19-import-error.jpg) | 数字化身份及坏批次的反例 |
+| [20-import-proof.jpg](dune/20-import-proof.jpg) | 字符串身份、upsert、批次事务和版本 |
+| [21-ledger-mirrors.jpg](dune/21-ledger-mirrors.jpg) | 最终镜库立面与蓝镜桥面 |
+| [22-outbox-error.jpg](dune/22-outbox-error.jpg) | 数据库成功但发送意图丢失 |
+| [23-outbox-proof.jpg](dune/23-outbox-proof.jpg) | 三个故障窗口的可靠通知 |
+| [24-integration.jpg](dune/24-integration.jpg) | 六数据系统与第四城NET-02七项回归 |
+| [25-canary-proof.jpg](dune/25-canary-proof.jpg) | 小流量、业务监控与自动回滚 |
+| [26-archive-descent.jpg](dune/26-archive-descent.jpg) | 最终井壁中的16米实际下行路线 |
+| [27-archive-heart.jpg](dune/27-archive-heart.jpg) | 井底E切换r43前 |
+| [28-main-ending.jpg](dune/28-main-ending.jpg) | 六主线结算，尾延迟支线仍未完成 |
+| [29-metrics-error.jpg](dune/29-metrics-error.jpg) | 均值稀释与超时缺失 |
+| [30-metrics-proof.jpg](dune/30-metrics-proof.jpg) | 按路由合并直方图的3000ms上界桶 |
+| [31-complete-sun.jpg](dune/31-complete-sun.jpg) | 十关最终结算与完整档案井 |
+| [32-complete-journal.jpg](dune/32-complete-journal.jpg) | 十份修复与四段后续故事 |
+| [33-five-cities.jpg](dune/33-five-cities.jpg) | 重玩第四城后保留第五城通行资格 |
+| [34-mobile-journal.jpg](dune/34-mobile-journal.jpg) | 390×844单列故障簿与路线 |
+| [35-mobile-workbench.jpg](dune/35-mobile-workbench.jpg) | 手机可滚动报告及固定验证按钮 |
+| [36-mobile-ending.jpg](dune/36-mobile-ending.jpg) | 手机六主线四支线结算与可达操作 |
+| [37-mobile-field.jpg](dune/37-mobile-field.jpg) | 手机偏振镜、稳身、交互与摇杆间距 |
