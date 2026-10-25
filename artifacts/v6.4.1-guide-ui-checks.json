@@ -202,18 +202,40 @@
       "check": "Acknowledged orientation is not repeated on the next new game",
       "passed": true,
       "evidence": "Second explicit new game starts directly; home How to Play remains available."
+    },
+    {
+      "check": "Merged finale automatically reaches Grove from the fifth-city departure on a mobile viewport",
+      "passed": true,
+      "evidence": "Headless Edge, 390×844: local preview starts in desert; Grove 01/06 appears without a second click within 30 seconds; page errors 0."
+    },
+    {
+      "check": "Mobile finale controls and width remain usable",
+      "passed": true,
+      "evidence": "390×844: pause changes button to Continue, Next advances to 02/06, document width does not exceed viewport; page errors 0."
+    },
+    {
+      "check": "Desktop finale plays through all six scenes and can replay",
+      "passed": true,
+      "evidence": "Headless Edge, 1280×720: scene numbers advance 01→06, replay button appears and returns to 01; page errors 0."
+    },
+    {
+      "check": "Merged first-run orientation still enters normal play",
+      "passed": true,
+      "evidence": "1280×720: How button visible, Start opens orientation; after Continue, app mode is play, HUD visible and modal closed; page errors 0."
     }
   ],
   "finalConsoleErrors": [],
   "viewportChecks": [
     "1280x720",
-    "390x844"
+    "1280x720 merged finale",
+    "390x844",
+    "390x844 merged finale"
   ],
   "integratedRemoteBaseline": "deb90c8",
-  "sourceFingerprint": "49079478d0107fec35140454ac9fbce132eeb5cbdcd566b367bfc539c39ce83f",
+  "sourceFingerprint": "e7a57930ca88fae62ee2dff8d76f254c7e3e805ce92a73e808ac37700b4aa7b3",
   "review": "docs/v6/GUIDANCE_REVIEW.md",
   "buildAssets": [
-    "assets/index-DDyY4Ica.js",
-    "assets/index-BT5H6hbh.css"
+    "assets/index-A0-agXLk.js",
+    "assets/index-BzMcKzHx.css"
   ]
 }
