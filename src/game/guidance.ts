@@ -1,10 +1,19 @@
 import type {Progress} from './domain';
 import {DUNE_BURIED} from './dune-domain';
 import {DUNE_LESSONS} from './dune-content';
+import {playCoach,type CoachContext} from './coach';
 import './guidance.css';
 
 const $=(id:string)=>document.getElementById(id)!;
 type GuideContext={city:Progress['city'];progress:Progress;playing:boolean;obscured:boolean};
+function coachContext(c:GuideContext):CoachContext{
+ const d=c.progress;
+ if(c.city==='dock')return {city:'dock',chapter:d.chapter,evidence:d.evidence};
+ if(c.city==='dune')return {city:'dune',...d.dune};
+ if(c.city==='snow')return {city:'snow',...d.snow};
+ if(c.city==='thread')return {city:'thread',...d.thread};
+ return {city:'forge',...d.forge};
+}
 
 /** Small UI cues reuse the current objective and interaction; they never advance progress. */
 export class LightGuidance {
@@ -15,8 +24,9 @@ export class LightGuidance {
  constructor(onHint:()=>void){
   this.next.id='play-guide';this.next.className='play-guide';
   this.next.setAttribute('aria-label','下一步操作引导');
-  this.next.innerHTML='<p id="guide-next" aria-live="polite"></p><ol id="guide-steps" aria-label="修复流程"><li>① 走近</li><li>② Q扫描</li><li>③ E工作台</li><li>④ R验证</li></ol>';
-  $('quest-distance').before(this.next);
+  this.next.innerHTML='<p class="coach-label"><kbd id="coach-key"></kbd><span id="coach-action"></span></p><p id="coach-hint" class="coach-hint"><span id="guide-next" aria-live="polite"></span></p><ol id="guide-steps" aria-label="修复流程"><li>① 走近</li><li>② Q扫描</li><li>③ E工作台</li><li>④ R验证</li></ol>';
+  const host=$('coach');host.replaceChildren(this.next);host.className='guide-host';host.removeAttribute('aria-live');
+  $('quest-distance').before(host);
   $('btn-hint').innerHTML='卡住了？看逐步线索 <span>↗</span>';
   const panels=[
    ['patch-panel','.patch-body','重放并验证'],['forge-workbench','.forge-scroll','验证并接入'],
@@ -39,6 +49,7 @@ export class LightGuidance {
    if(w.key!==key){w.key=key;w.note.hidden=true;w.note.textContent='';}
   }
   this.next.hidden=!c.playing||c.obscured;
+  $('coach').hidden=this.next.hidden;
   if(this.next.hidden){this.highlight([]);this.signature='';return;}
   const code=($('quest-code').textContent??'').split(' / ')[0];
   const label=$('interact-label').textContent??'';
@@ -76,7 +87,13 @@ export class LightGuidance {
   }else if(c.city==='dune'&&c.progress.dune.phase==='complete'){
    text=touch?'点「故障簿」可补支线；册底城际地图可回访前四城。':'按M打开故障簿补支线；册底城际地图可回访前四城。';
   }
-  const signature=JSON.stringify([text,task,step,targets,touch]);if(signature===this.signature)return;this.signature=signature;
+  const base=playCoach(coachContext(c));let key=touch?'摇杆':'WASD',action=task?'走向当前任务':base?.label??'跟随菱形标记';
+  if(!task&&base?.key==='M'&&!near){key=touch?'任务册':'M';if(c.city!=='dune')text=base.hint;}
+  if(targets.includes('dune-weather')){key=touch?'天气':'T';action='先显影地下档案';}
+  else if(targets.includes('dune-lens')){key=touch?'偏振镜':'G';action='开启偏振显影';}
+  else if(near){key=touch?(step===2?'溯源':'交互'):(step===2?'Q':'E');action=step===2?'先扫描取得证据':label;}
+  const signature=JSON.stringify([text,task,step,targets,touch,code,key,action]);if(signature===this.signature)return;this.signature=signature;
+  $('coach-key').textContent=key;$('coach-action').textContent=action;
   $('guide-next').textContent=`下一步 · ${text}`;
   const steps=$('guide-steps');steps.hidden=!task;
   const labels=touch?['① 走近','② 溯源','③ 交互','④ 验证']:['① 走近','② Q扫描','③ E工作台','④ R验证'];

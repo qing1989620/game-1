@@ -1,4 +1,6 @@
 .play-guide{margin:13px 0 3px;border-left:2px solid var(--amber);padding-left:10px;background:transparent}
+.guide-host{background:transparent}.guide-host[hidden]{display:none}
+.play-guide .coach-label{display:flex;align-items:center;gap:8px;margin:0 0 5px}.play-guide .coach-label span{font-size:11px;line-height:1.6}.play-guide .coach-label kbd{font-size:9px;color:var(--amber)}.play-guide .coach-hint{margin:0;opacity:1}
 #app .objective #guide-next{font-size:11px;line-height:1.85;color:var(--amber);margin:0;letter-spacing:0}
 #guide-steps{list-style:none;display:flex;flex-wrap:wrap;gap:5px 8px;padding:0;margin:8px 0 0;font-size:9px;line-height:1.8;color:inherit;opacity:.85}
 #guide-steps[hidden],.play-guide[hidden],.workbench-guide-note[hidden]{display:none}

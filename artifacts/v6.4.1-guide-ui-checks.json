@@ -9,9 +9,9 @@
       "evidence": "Menu has no extra tutorial overlay."
     },
     {
-      "check": "Fresh world guide explains movement, marker distance and camera without a blocking modal",
+      "check": "After orientation world guide explains movement, marker distance and camera",
       "passed": true,
-      "evidence": "Transparent objective contains current next action; ordinary movement remains available."
+      "evidence": "Closing the one-time orientation with Escape enters normal movement; a single compact transparent coach is visible."
     },
     {
       "check": "Near NPC guide switches directly to E dialogue without asking for a scan",
@@ -81,7 +81,7 @@
     {
       "check": "Guide hides on pause and returns after resume",
       "passed": true,
-      "evidence": "Pause menu keeps focus; no extra guide overlay."
+      "evidence": "Retested on merged build: pause hides the single shared coach."
     },
     {
       "check": "Forge workbench uses its actual validation label and contextual power hint",
@@ -142,6 +142,66 @@
       "check": "Final build mobile scan and tap interaction follow the current first-city target",
       "passed": true,
       "evidence": "Latest target-priority filter still allows actual Q-01: native Scan button→tap interaction opens workbench, without keyboard input."
+    },
+    {
+      "check": "Merged first-time orientation is closable and uses touch instructions",
+      "passed": true,
+      "evidence": "Existing upstream orientation retained; phone copy explains scan/interaction/full verification and the realtime weather workbench."
+    },
+    {
+      "check": "Merged world has one guidance card and keeps upstream coach identities",
+      "passed": true,
+      "evidence": "Shared card reuses coach/key/action/hint IDs and the proximity-aware guide."
+    },
+    {
+      "check": "Merged first workbench has one hint area with no duplicate automatic answer",
+      "passed": true,
+      "evidence": "Normal touch scan and interaction; inline hint is observation-first and uses the common verification instructions."
+    },
+    {
+      "check": "Merged desktop flow keeps observation hints preview and actual verification separate",
+      "passed": true,
+      "evidence": "Final merged build: one world card, native NPC dialogue/Q/E, two progressive notes, then preview after reordering."
+    },
+    {
+      "check": "Merged guide hides during actual verification cinema",
+      "passed": true,
+      "evidence": "Native Q-01 full verification starts repair cinema, and both guide visibility wrappers hide."
+    },
+    {
+      "check": "Merged coach still prioritizes the new incident over the old nearby device",
+      "passed": true,
+      "evidence": "Remote phase coach and proximity logic share one card; at old billing checkpoint the new snapshot task stays primary."
+    },
+    {
+      "check": "Merged coach keeps the buried-archive weather prerequisite",
+      "passed": true,
+      "evidence": "Tracked unscanned cache followup in sun highlights weather rather than an old completed interaction."
+    },
+    {
+      "check": "Merged shared coach follows forge thread and snow on normal city travel",
+      "passed": true,
+      "evidence": "Three actual map trips; each single card changes to that city current incident and supports touch labels."
+    },
+    {
+      "check": "Merged snow coach preserves transparent city styling",
+      "passed": true,
+      "evidence": "Shared card inherits the snow palette and has no opaque objective background."
+    },
+    {
+      "check": "Reopening How to Play from menu returns to menu without resetting continuation",
+      "passed": true,
+      "evidence": "Manual orientation has no pending new start; existing Continue remains visible."
+    },
+    {
+      "check": "Continuation after reopening instructions retains the scanned first repair",
+      "passed": true,
+      "evidence": "Help does not replace or clear saved evidence."
+    },
+    {
+      "check": "Acknowledged orientation is not repeated on the next new game",
+      "passed": true,
+      "evidence": "Second explicit new game starts directly; home How to Play remains available."
     }
   ],
   "finalConsoleErrors": [],
@@ -149,10 +209,11 @@
     "1280x720",
     "390x844"
   ],
-  "sourceFingerprint": "5a929c3847bbfe922f534581093ea69aaa25d0fb062d334b733396dd3536731e",
+  "integratedRemoteBaseline": "deb90c8",
+  "sourceFingerprint": "49079478d0107fec35140454ac9fbce132eeb5cbdcd566b367bfc539c39ce83f",
   "review": "docs/v6/GUIDANCE_REVIEW.md",
   "buildAssets": [
-    "assets/index-BlR_uOE3.js",
-    "assets/index-Cyp2RrTJ.css"
+    "assets/index-DDyY4Ica.js",
+    "assets/index-BT5H6hbh.css"
   ]
 }

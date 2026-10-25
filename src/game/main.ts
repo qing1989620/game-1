@@ -4,6 +4,7 @@ import { CityView } from './view';
 import { A_CHECKPOINT, CHECKPOINTS, DOCK_BOUNDS, Motor, type V3 } from './physics';
 import { GameInput } from './input';
 import { CityAudio } from './audio';
+import { patchCoach, readOnboarded, writeOnboarded } from './coach';
 import { MIRA_POS, NODE_POS, REORDER_POS, STATION_POS } from './world';
 import { ForgeChapter } from './forge-chapter';
 import type { Weather } from './forge-domain';
@@ -47,6 +48,7 @@ let modalType:string|null=null;
 let priorFocus:HTMLElement|null=null;
 let dialogueIndex=-1;
 let hintCounts:Partial<Record<Chapter,number>>={};
+let pendingStart=false;
 let hudAccumulator=0;
 let persistAccumulator=0;
 let saved=readProgress();
@@ -346,7 +348,7 @@ function hint():void {
     board:['到 A 站的列车旁按 E。列车会沿刚刚证明的线路返航。'],
     complete:['到 END 站按 E，或点击任务下方「前往脉冲炉」。天气按钮能切换晴雨。'],
   };
-  const list=hints[c];toast(list[Math.min(index,list.length-1)],7);
+  const list=hints[c];const detailed=index>=2&&(c==='reorder'||c==='rail')?patchCoach(c==='reorder'?'Q-01':'DS-01').hint:null;toast(detailed??list[Math.min(index,list.length-1)],7);
 }
 
 function openModal(type:string):void {
@@ -373,6 +375,19 @@ function openModal(type:string):void {
     $('map-thread').onclick=()=>{if(thread.active){closeModal();thread.openJournal();}else enterThread();};
     $('map-snow').onclick=()=>{if(snow.active){closeModal();snow.openJournal();}else enterSnow();};
     $('map-dune').onclick=()=>{if(dune.active){closeModal();dune.openJournal();}else enterDune();};
+  } else if(type==='coach') {
+    content.innerHTML='<div class="eyebrow">HOW TO PLAY / 上手四步</div><h2 id="modal-title">看见错误，再修好城市。</h2>'+
+      '<p class="coach-loop">这座城市按因果运行。你的任务不是打赢它，而是<b>找到哪里先错了，把它改成对的，然后让世界重放一遍</b>。</p>'+
+      '<ol class="coach-steps">'+
+      '<li><b>走过去</b><span>WASD 移动，右键拖动转视角。屏幕左上角始终告诉你下一步去哪。</span></li>'+
+      '<li><b>按 Q 扫描</b><span>靠近异常点扫描取证。<b>没扫描就无法编辑</b>——这是硬性前置条件。</span></li>'+
+      '<li><b>按 E 打断点</b><span>在工作台修改规则。首城可调事件顺序或重连指针；天气集电台会持续运行，需冻结时点右上角暂停。</span></li>'+
+      '<li><b>按 R 重放验证</b><span>失败会给一条可复现的反例，告诉你错在哪。<b>可反复尝试，失败保留证据。</b></span></li>'+
+      '</ol>'+
+      '<p class="modal-rule">参考线索逐步尝试，最后点完整验证提交。满足关卡约束的有效方案都会被认可。</p>'+
+      '<div class="modal-actions"><button class="primary" id="modal-resume">明白了 <span>→</span></button></div>';
+    if(window.innerWidth<=700)content.innerHTML=content.innerHTML.replace('WASD 移动，右键拖动转视角。','左下摇杆移动，右侧空白拖动转视角。').replaceAll('按 Q 扫描','点「溯源」扫描').replace('按 E 打断点','点交互提示').replace('按 R 重放验证','点完整验证');
+    writeOnboarded();
   } else content.innerHTML='<div class="eyebrow">RE:FLOW 404 / 断点之城</div><h2 id="modal-title">一个错误，也有存在的意义。</h2><p>CIVITAS 是一座运行中的城市。路网是数据结构，列车是执行事件，居民的名字是一条不能丢失的记录。<br>当清除署决定删除异常，零号选择先听懂它们。</p><p>当前开放指针港、脉冲炉、千线程、雨线城白噪雪原和镜库城赤砂档案海五城。第五城用赤色沙海与青蓝镜面遗迹呈现六条数据系统主线和四份遗留故障：沙尘暴中用G偏振镜取证、F稳身，最后完成跨城回归、灰度回滚及16米档案井切换。关卡从局部因果逐渐进入并发、网络与生产数据承诺。其余三城仍在规划中。</p><p class="modal-rule">城市、角色与声音由原创程序生成。运行中无需登录，不上传存档，不调用 AI 或第三方服务。存档仅保留在当前浏览器。</p><div class="modal-actions"><button class="primary" id="modal-resume">回到世界 <span>→</span></button><button class="text-button" id="modal-card-link">查看零号设定卡 ↗</button></div>';
   $('modal-resume')?.addEventListener('click',closeModal);
   $('modal-checkpoint')?.addEventListener('click',()=>{closeModal();if(dune.active){dune.action('Escape');motor.warp(motor.checkpoint);if(!dune.blocked)view.mode='follow';toast('已回到镜库城最近的安全锚点。');return;}if(snow.active){snow.action('Escape');motor.warp(motor.checkpoint);if(!snow.blocked)view.mode='follow';toast('已回到最近交接的雪原避风点。');return;}if(thread.active){thread.action('Escape');motor.warp(motor.checkpoint);if(!thread.blocked)view.mode='follow';toast('已回到千线程最近的安全检查点。');return;}if(forge.active){forge.action('Escape');motor.warp(motor.checkpoint);if(!forge.blocked)view.mode='follow';toast('已回到脉冲炉最近的安全检查点。');return;}if(mode==='patch')closePatch();if(mode==='cinema'){toast('请先结束当前列车回放。');return;}motor.warp(motor.checkpoint);view.mode='follow';toast('已回到最近的安全检查点。');});
@@ -386,7 +401,11 @@ function openModal(type:string):void {
   requestAnimationFrame(()=>$('btn-close-modal').focus());
 }
 function closeModal():void {
-  if(!modalType)return;modalType=null;show('modal-layer',false);audio.setPaused(document.hidden);input.clear();priorFocus?.focus({preventScroll:true});
+  if(!modalType)return;
+  const wasOrientation=modalType==='coach'&&pendingStart;
+  modalType=null;show('modal-layer',false);audio.setPaused(document.hidden);input.clear();priorFocus?.focus({preventScroll:true});
+  // Closing the orientation by any route still lets the player in.
+  if(wasOrientation){pendingStart=false;start();}
 }
 function applySettings():void {
   saveSettings(settings);view.applySettings(settings);
@@ -394,7 +413,7 @@ function applySettings():void {
   $('btn-sound').setAttribute('aria-label',`声音：${settings.sound?'开':'关'}`);$('btn-sound').setAttribute('aria-pressed',String(settings.sound));
 }
 
-$('btn-start').onclick=()=>start();$('btn-continue').onclick=()=>start(true);$('btn-interact').onclick=interact;$('tool-patch').onclick=interact;
+$('btn-start').onclick=()=>{if(readOnboarded())start();else{pendingStart=true;openModal('coach');}};$('btn-continue').onclick=()=>start(true);$('btn-interact').onclick=interact;$('tool-patch').onclick=interact;
 $('btn-dialogue').onclick=()=>advanceDialogue();$('tool-trace').onclick=scan;$('touch-scan').onclick=scan;
 $('btn-hint').onclick=hint;$('btn-close-patch').onclick=closePatch;$('btn-preview').onclick=preview;$('btn-verify').onclick=verify;
 $('btn-undo').onclick=()=>{draftRail=structuredClone(campaign.data.rail);draftOrder=[...campaign.data.order];renderEditor();world.showDraft(patchCase==='DS-01'?draftRail:null);renderNodes();show('proof-panel',false);toast('草案已撤销，原始证据保留。');};
@@ -403,6 +422,7 @@ $('btn-skip-replay').onclick=finishCinema;$('btn-restart').onclick=()=>start();
 $('btn-roam').onclick=()=>{setMode('play');view.mode='follow';toast('城市还在运行。欢迎留下来。');};
 $('btn-copy-result').onclick=async()=>{const record=`RE:FLOW 404 · 指针港修复记录\n用时 ${clock(campaign.data.elapsed)} / ${campaign.data.attempts} 次实验 / ${campaign.data.counterexamples} 个反例\n线路：${traverse(campaign.data.rail).route.join(' → ')}\n系统找不到，不代表不存在。`;try{await navigator.clipboard.writeText(record);toast('修复记录已复制。');}catch{toast('浏览器未开放剪贴板权限。你可以截图保存结算。');}};
 $('btn-settings').onclick=()=>openModal('settings');$('btn-help').onclick=()=>openModal('help');$('btn-about').onclick=()=>openModal('about');
+$('btn-how').onclick=()=>openModal('coach');
 $('btn-next-city').onclick=enterForge;$('btn-forge-travel').onclick=enterForge;
 $('weather-clear').onclick=()=>changeWeather('clear');$('weather-rain').onclick=()=>changeWeather('rain');
   $('btn-map').onclick=$('tool-map').onclick=()=>{if(dune.active)dune.openJournal();else if(snow.active)snow.openJournal();else if(thread.active)thread.openJournal();else openModal('map');};$('btn-pause').onclick=()=>{persist();openModal('pause');};

@@ -15,7 +15,7 @@ const profile=profiles[manifest.version];
 if(!profile)throw new Error(`No reviewed release profile for ${manifest.version}`);
 function walk(dir){return fs.readdirSync(path.join(root,dir),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(`${dir}/${e.name}`):[`${dir}/${e.name}`]);}
 function sourceFingerprint(){
-  const files=[...walk('src/game'),...walk('tests'),...walk('public'),...walk('docs/v6'),...walk('docs/guide'),
+  const files=[...walk('src/game'),...walk('tests'),...walk('public'),...walk('docs/v6'),...walk('docs/guide'),...walk('scripts'),
     'index.html','package.json','package-lock.json','vite.config.ts','tsconfig.json','scripts/check-release.mjs','README.md','docs/ASSET_LICENSES.md'];
   if(fs.existsSync(path.join(root,'.github/workflows/verify.yml')))files.push('.github/workflows/verify.yml');
   const digest=crypto.createHash('sha256');

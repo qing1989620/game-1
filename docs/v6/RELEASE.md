@@ -36,4 +36,4 @@
 
 ## 交付范围
 
-当前开放5 / 8主城。发布前243项测试、28项引导界面验收及当前自审见 [GUIDANCE_REVIEW.md](GUIDANCE_REVIEW.md)；第五城完整实走基线保留在 [DUNE_REVIEW.md](DUNE_REVIEW.md)。推送前需先通过本地 `npm run release:check`，推送后确认同一提交的 GitHub CI。真机移动性能、跨浏览器长时运行、独立玩家试玩与后续内容制作仍需继续；前四城报告保留历史基线。
+当前开放5 / 8主城。发布前263项测试、40项引导界面验收及当前自审见 [GUIDANCE_REVIEW.md](GUIDANCE_REVIEW.md)；第五城完整实走基线保留在 [DUNE_REVIEW.md](DUNE_REVIEW.md)。推送前需先通过本地 `npm run release:check`，推送后确认同一提交的 GitHub CI。真机移动性能、跨浏览器长时运行、独立玩家试玩与后续内容制作仍需继续；前四城报告保留历史基线。

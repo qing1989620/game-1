@@ -97,14 +97,18 @@ npm run preview -- --host 127.0.0.1 --port 5387
 - `src/game/input.ts`：键盘、鼠标、摇杆和 Pointer Events。
 - `src/game/audio.ts`：用户手势解锁的原创 Web Audio 编曲与反馈，默认静音。
 - `src/game/main.ts`：任务状态、工作台、反例报告、演出、设置、暂停与结算。
+- `src/game/coach.ts`：上下文引导的纯逻辑层，按当前城市与实时进度给出唯一下一步动作（按哪个键、做什么、为什么）。四城各自读自己的 phase 与证据集，不硬编码流程顺序。
 - `public/character-card.html`：主角概念设定卡，明确区分 AI 概念图与实机模型。
 - `tests/v6.test.ts`：新规则、事务、存档和碰撞测试；旧版 18 个测试仍保留。
 - `tests/forge.test.ts`：21 项新增测试，覆盖漏电、温度边界、帧率一致性、全部加法输入、旧存档迁移与登塔碰撞。
+- `tests/coach.test.ts`：13 项引导测试，覆盖四城的阶段推进、证据门槛与回归提示。
+- `e2e/`：Playwright 端到端脚本，覆盖桌面完整一局、移动端视口、触控热区、四城引导与雪原 HUD 透明度。
 - `tests/thread.test.ts`：33 项测试，覆盖六种规则、有效替代解、事务、伪造存档、可选任务、重玩通行资格、三段坡道和独立城市边界。
 - `tests/snow.test.ts`：62 项测试，覆盖八关反例/有效替代解、CRC 独立向量、TTL 转发边界、真实模型预算、事务、伪造存档、旧存档迁移、重玩资格、跨帧率风力、冰桥跌落与全部主桥/三段最终路线。
 - `tests/dune.test.ts`：86项新增测试，覆盖十关反例/有效替代解、库存有界搜索、提交日志身份、重复恢复、分布桶精度、七系统回归、灰度、严格存档与旧版迁移、风力/地形、最近遮挡镜头。
 - `scripts/check-release.mjs`：文档本地链接、构建静态资产、开发工具隔离和已审核源码指纹核验。
-- `.github/workflows/verify.yml`：Node 24 下干净安装并执行发布检查，仓库权限只读。
+- `scripts/check-deploy-safety.mjs`：Vercel 部署安全检查。核验构建脚本可复现、`base: './'` 相对路径、产物只含浏览器所需文件、源码与测试不泄漏进 `dist/`、生产包无开发钩子，以及 `e2e/` 的 playwright 依赖声明。
+- `.github/workflows/verify.yml`：Node 24 下干净安装并执行发布检查与部署安全检查，仓库权限只读。
 - `qa/viewport.html`：本地响应式验收画框，不纳入正式构建。
 
 采用 Three.js 直接管理渲染，不引入 React 的逐帧状态更新。重复楼体使用 [InstancedMesh](https://threejs.org/docs/pages/InstancedMesh.html)。角色碰撞选用文档允许的轻量 kinematic controller，任务模拟与视觉帧率独立。
@@ -117,12 +121,45 @@ npm run preview -- --host 127.0.0.1 --port 5387
 
 详细记录见 [验收报告](QA_REPORT.md)、[老项目审查及重设计](REDESIGN.md)、[素材许可](../ASSET_LICENSES.md)、[角色生成记录](CHARACTER_PROMPT.md) 和 [发布说明](RELEASE.md)。
 
-当前243项自动化测试、严格TypeScript与生产构建通过。V6.4.1引导补丁的28项正常界面验收、两种视口和适用范围见 [GUIDANCE_REVIEW.md](GUIDANCE_REVIEW.md)，回执为 `artifacts/v6.4.1-guide-ui-checks.json`。第五城原始功能基线另有85项历史记录：第五城十关正常实走、错误/正确方案、七系统回归、真实灰度失败与回滚、16米坡道下行、五城往返及390×844手机布局见 [DUNE_REVIEW.md](DUNE_REVIEW.md)，机器可读记录为 `artifacts/v6.4-ui-checks.json`。前四城报告保留历史基线。本轮保留原有157项自动测试并检查跨城影响，未重做每项旧关卡的完整人工游玩。手机视口与原生Pointer Events测试不等于安卓/iOS真机验收。
+当前263项自动化测试、严格TypeScript与生产构建通过。V6.4.1引导补丁的40项正常界面验收、两种视口和适用范围见 [GUIDANCE_REVIEW.md](GUIDANCE_REVIEW.md)，回执为 `artifacts/v6.4.1-guide-ui-checks.json`。第五城原始功能基线另有85项历史记录：第五城十关正常实走、错误/正确方案、七系统回归、真实灰度失败与回滚、16米坡道下行、五城往返及390×844手机布局见 [DUNE_REVIEW.md](DUNE_REVIEW.md)，机器可读记录为 `artifacts/v6.4-ui-checks.json`。前四城报告保留历史基线。本轮保留原有243项并合并20项上下文引导测试并检查跨城影响，未重做每项旧关卡的完整人工游玩。手机视口与原生Pointer Events测试不等于安卓/iOS真机验收。
 
 发布顺序：完成代码与文档 → 运行 `npm run verify` → 正常界面回归与代码自审 → 记录最终控制台错误列表 → `node scripts/check-release.mjs --seal` → `npm run release:check` → 提交并推送。指纹记录对应所审源码；源码再变化时必须重跑受影响项、重新封存。封存命令本身不会替代界面测试或审查。GitHub CI 会重新执行同一发布检查。
 
 当前发布检查按包版本选择独立回执与审查文件，V6.4.1引导补丁要求至少12项全部通过的UI记录；V6.4第五城基线独立要求40项记录，且要求空的最终错误列表。指纹覆盖当前游戏源码、测试、公共资源、图文攻略、审查文档、包锁和构建/CI 配置；文本行尾归一，图片按原始二进制哈希，Windows 与 Linux 可复核。回执自身不进入指纹。
 
-尚未实现：剩余三主城与 ROOT 终章、完整跨城依赖 DAG、战斗与钩锁、手柄、通用动态物理、全量 glTF/LOD 流送和完整剧情音轨。地图标记规划项，不声称具有 5–8 小时内容。第二至第五城按首次进入延迟构建，只渲染当前场景；五个场景缓存供往返使用，尚未实现全量城市流送。当前JS主包约901 kB（gzip约261 kB），CSS约97 kB（gzip约21 kB），构建仍提示 500 kB 分块建议，未关闭该提示。
+尚未实现：剩余三主城与 ROOT 终章、完整跨城依赖 DAG、战斗与钩锁、手柄、通用动态物理、全量 glTF/LOD 流送和完整剧情音轨。地图标记规划项，不声称具有 5–8 小时内容。第二至第五城按首次进入延迟构建，只渲染当前场景；五个场景缓存供往返使用，尚未实现全量城市流送。当前JS主包约909 kB（gzip约264 kB），CSS约100 kB（gzip约21 kB），构建仍提示 500 kB 分块建议，未关闭该提示。
+
 
 老项目主入口保留在 `legacy-v5.html`，代码仍在 `src/main.ts`、`src/v5/`，旧说明保留在 `docs/v6/LEGACY_V5_README.md`。正式首页改为 V6；正式构建只打包 V6。
+
+## 线上部署（Vercel）
+
+本项目由 **Vercel 托管**：任何进入 `main` 的改动都会触发一次自动构建与部署。仓库内没有 `vercel.json`，构建命令、输出目录与 Node 版本都配置在 Vercel 项目的设置里。
+
+当前仓库按以下约定组织，Vercel 侧应保持一致：
+
+| 项 | 值 | 原因 |
+| --- | --- | --- |
+| Framework / Build | Vite（`npm run build`） | `build` 先跑 `tsc --noEmit`，类型错误在部署前暴露 |
+| Output Directory | `dist` | Vite 默认输出；`dist/` 只含浏览器所需文件 |
+| Install Command | `npm ci` | 依赖 `package-lock.json` 才能复现 |
+| Node | 24 及以上 | `engines.node` 要求，且构建工具链按 24 验证 |
+
+改动时请遵守：
+
+1. **不要改动 `vite.config.ts` 的 `base: './'`。** 相对路径让同一份产物既能挂在根路径也能挂在子路径；改成 `'/'` 会在子路径部署时让所有资源 404。
+2. **不要把源码、测试或脚本放进 `dist/`。** `public/` 下的内容会被原样复制进产物，放错文件等于把它发布出去。
+3. **不要让开发钩子进入生产包。** `import.meta.env.DEV` 包裹的传送工具不会进包，但直接写成 `window.__city` 就会泄漏；`check-release.mjs` 与 `check-deploy-safety.mjs` 都会拦截。
+4. **不要提交体积大的测试产物。** 端到端截图不进版本库（`.gitignore` 已排除 `artifacts/guide/`），否则每次 Vercel 克隆都要下载它们。验收收据 `artifacts/e2e-*-checks.json` 体积很小，保留。
+5. **新增 HUD 元素时要跟随城市的配色变量。** 五城各自定义 `--amber` 等变量
+   （雪原重定义为铁锈红 `#ac4e2e` 并改用浅底深字）。新面板应使用变量而不是
+   写死颜色，否则换城后会与该城视觉冲突。雪原的 objective 面板必须保持
+   `background:transparent`，任何加在它内部的面板都不能引入不透明底色。
+6. **改动源码后发布门禁会拒绝。** `check-release.mjs --strict` 比对已封存的源码指纹，源码一变就失败。这是设计意图：必须重跑受影响的界面验收并 `--seal` 重新封存，而不是绕过它。
+
+提交前建议本地跑一次：
+
+```sh
+npm run verify          # 测试 + 构建 + 发布检查
+npm run deploy:safety   # 部署安全检查
+```

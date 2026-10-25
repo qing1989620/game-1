@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-25",
+  "method": "Playwright against production dist; no state injection, no dev teleport hooks",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "checks": [
+    {
+      "id": "menu-how-entry",
+      "pass": true,
+      "detail": "菜单「怎么玩」入口={\"visible\":true,\"text\":\"怎么玩？ ↗\"}"
+    },
+    {
+      "id": "first-run-orientation",
+      "pass": true,
+      "detail": "引导在进入世界前弹出=true 步骤=4 此刻 mode=menu"
+    },
+    {
+      "id": "game-started",
+      "pass": true,
+      "detail": "mode=play chapter=meet"
+    },
+    {
+      "id": "coach-meet",
+      "pass": true,
+      "detail": "chapter=meet coach={\"key\":\"W A S D\",\"action\":\"沿港口灯带向前走\",\"hint\":\"MIRA 在前方雨棚下。靠近后按 E 与她对话。\"}"
+    },
+    {
+      "id": "coach-reorder-needs-scan",
+      "pass": true,
+      "detail": "扫描前 coach={\"key\":\"Q\",\"action\":\"扫描坏站台取证\",\"hint\":\"站台在旅客离开前就消失了。靠近后按 Q 采集证据。\"}"
+    },
+    {
+      "id": "coach-reorder-after-scan",
+      "pass": true,
+      "detail": "扫描后 coach={\"key\":\"E\",\"action\":\"打断点，改写事件顺序\",\"hint\":\"证据已到手。按 E 冻结这段时空，打开因果工作台。\"}"
+    },
+    {
+      "id": "patch-coach",
+      "pass": true,
+      "detail": "工作台引导={\"visible\":true,\"key\":\"R\",\"action\":\"把「让旅客离开」排到第一位\"}"
+    },
+    {
+      "id": "A-no-browser-errors",
+      "pass": true,
+      "detail": "错误 0 条 "
+    },
+    {
+      "id": "no-repeat-orientation",
+      "pass": true,
+      "detail": "二次开始不弹引导=true"
+    },
+    {
+      "id": "dock-completed",
+      "pass": true,
+      "detail": "指针港真实通关 chapter=complete"
+    },
+    {
+      "id": "coach-after-dock",
+      "pass": true,
+      "detail": "通关后引导指向下一城 coach={\"key\":\"E\",\"action\":\"乘城际列车前往脉冲炉\",\"hint\":\"指针港已恢复。到 END 站按 E，或点下方「乘城际列车出发」。\"}"
+    },
+    {
+      "id": "forge-unlocked",
+      "pass": true,
+      "detail": "脉冲炉=available"
+    },
+    {
+      "id": "later-cities-locked",
+      "pass": true,
+      "detail": "千线程=locked 白噪雪原=locked（未通关前城时保持锁定，符合设计）"
+    },
+    {
+      "id": "city-forge-coach",
+      "pass": true,
+      "detail": "当前城市=forge coach={\"key\":\"W A S D\",\"action\":\"找到 K-13\",\"hint\":\"沿灯带向前，热工区的操作员在前方。靠近后按 E。\"}"
+    },
+    {
+      "id": "B-no-browser-errors",
+      "pass": true,
+      "detail": "错误 0 条 "
+    }
+  ]
+}

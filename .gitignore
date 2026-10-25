@@ -2,3 +2,8 @@ node_modules/
 dist/
 *.local
 .DS_Store
+
+# E2E 截图是测试副产品，不进版本库：体量大且每次 Vercel 克隆都要下载。
+# 验收收据（artifacts/e2e-*-checks.json）仍然保留。
+artifacts/guide/
+artifacts/e2e-*.png
