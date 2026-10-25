@@ -7,3 +7,6 @@ dist/
 # 验收收据（artifacts/e2e-*-checks.json）仍然保留。
 artifacts/guide/
 artifacts/e2e-*.png
+# AOCI agent host integration (machine-bound; do not commit)
+.codex/config.toml
+.codex/config.toml.backup.*

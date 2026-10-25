@@ -98,3 +98,7 @@ body[data-city=dune] .film-vignette{background:radial-gradient(ellipse at 50% 40
  #dune-result{padding:145px 20px 22px}.dune-result-card{width:100%;padding:21px 23px}.dune-status-code{font-size:51px}.dune-result-card h2{font-size:25px}#dune-ending{font-size:11px}#dune-result-stats b{font-size:21px}.dune-result-links button{min-height:44px;font-size:11px}
 }
 @media(max-height:600px) and (min-width:700px){#dune-editor{top:108px;bottom:16px;width:365px}#dune-weather{top:73px}#dune-weather>span{display:none}#app[data-city=dune] .objective{top:113px;width:265px}#dune-optics{bottom:207px}#dune-air{top:auto;bottom:116px}#dune-journal{top:91px}#dune-result{padding-top:97px}.dune-result-card{padding:17px 23px}.dune-result-card h2{font-size:24px}}
+
+.journey-curtain{position:fixed;inset:0;z-index:9999;pointer-events:none;background:radial-gradient(circle at 50% 55%,#124753,#071c28 70%);opacity:0;transition:opacity .65s ease}.journey-curtain.active{opacity:1}.journey-curtain.leaving{opacity:0}
+
+#dune-layer.dune-journey #dune-weather,#dune-layer.dune-journey #dune-air,#dune-layer.dune-journey #dune-field-tools,#dune-layer.dune-journey #dune-optics,#app:has(#dune-layer.dune-journey) #hud,#app:has(#dune-layer.dune-journey) #toast,#app:has(#dune-layer.dune-journey) #btn-map{display:none!important}
