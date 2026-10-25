@@ -6,12 +6,15 @@
 @media(max-width:700px){.source-picker button{width:44px;height:44px}.target-picker button{min-height:44px}.event-arrows button{min-width:38px;min-height:38px}.event-grip{min-width:34px;min-height:44px}.patch-header .close-button,.modal-close{min-width:44px;min-height:44px}.patch-header{padding-top:3px;padding-bottom:3px}#proof-panel .close-button{min-width:40px;min-height:40px}.setting-row{min-height:66px}#patch-panel{padding-bottom:env(safe-area-inset-bottom,0)}.topbar{padding-top:env(safe-area-inset-top,0)}.result-copy{padding-bottom:env(safe-area-inset-bottom,0)}}
 
 /* ===== 新手引导 / contextual coach ===== */
-.coach{margin-top:16px;padding:11px 13px;border-left:2px solid var(--amber);background:#ffca7b0a;max-width:100%}
-.coach-kicker{font-size:7px;letter-spacing:.14em;color:#c3ac81;margin-bottom:8px}
+/* Colours follow the city's own variables so the card matches each district
+   without a per-city override. The snowfield redefines --amber for its light
+   palette; the darker cities keep the default. */
+.coach{margin-top:16px;padding:11px 13px;border-left:2px solid var(--amber);background:color-mix(in srgb,var(--amber) 5%,transparent);max-width:100%}
+.coach-kicker{font-size:7px;letter-spacing:.14em;color:var(--amber);opacity:.72;margin-bottom:8px}
 .coach-label{display:flex;align-items:baseline;gap:8px;margin:0}
 .coach-label kbd{flex:0 0 auto;font-size:9px;min-width:20px;padding:3px 5px}
-.coach-label span{font-size:13px;color:#eef2ee;line-height:1.5}
-.coach-hint{font-size:10px;color:#a8bcb0;line-height:1.85;margin:7px 0 0}
+.coach-label span{font-size:13px;color:inherit;line-height:1.5}
+.coach-hint{font-size:10px;line-height:1.85;margin:7px 0 0;opacity:.72}
 .patch-coach{padding:11px 13px;border-left:2px solid var(--amber);background:#ffca7b0a;margin-bottom:18px}
 .patch-coach-kicker{display:block;font-size:7px;letter-spacing:.14em;color:#c3ac81;margin-bottom:8px}
 .patch-coach-label{display:flex;align-items:baseline;gap:8px;margin:0}

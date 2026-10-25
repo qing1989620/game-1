@@ -15,6 +15,10 @@ body[data-city=snow] .film-vignette{background:radial-gradient(ellipse at 50% 45
 #app[data-city=snow] .compass-n{color:#a64a2d}
 #app[data-city=snow] .identity{background:#ece9dbd9;padding:9px 13px;border-left:2px solid #ae5a34}
 #app[data-city=snow] .identity b,#app[data-city=snow] .identity span{color:#536044}
+/* The coach card follows the city's --amber and inherited text colour, so it
+   already matches the snowfield's light palette. Only the keycap needs a
+   local adjustment: the dark-on-dark default border is unreadable on snow. */
+#app[data-city=snow] .coach-label kbd{border-color:#ad986b78;color:#5b4a2f}
 #app[data-city=snow] .tools{background:#ece9dbed;padding:11px 18px;border:1px solid #747f6338;backdrop-filter:blur(8px)}
 #app[data-city=snow] .tools button,#app[data-city=snow] .tools small{color:#3b4d3a}
 #app[data-city=snow] #btn-interact{background:#f1ebd9f5;color:#593b29;border:1px solid #aa613c;box-shadow:0 7px 30px #5b594c20}

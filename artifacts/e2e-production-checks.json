@@ -34,7 +34,7 @@
     {
       "id": "reach-mira",
       "pass": true,
-      "detail": "z=17.9 interactPrompt=true"
+      "detail": "z=17.7 interactPrompt=true"
     },
     {
       "id": "mira-dialogue",
@@ -69,7 +69,7 @@
     {
       "id": "walk-to-elevated-A",
       "pass": true,
-      "detail": "y=13.00 z=-43.48 chapter=rail bridge=true"
+      "detail": "y=13.00 z=-43.39 chapter=rail bridge=true"
     },
     {
       "id": "scan-DS-01",
@@ -99,7 +99,7 @@
     {
       "id": "train-to-result",
       "pass": true,
-      "detail": "chapter=complete mode=result elapsed=28.9s route=A→B→C→END"
+      "detail": "chapter=complete mode=result elapsed=30.6s route=A→B→C→END"
     },
     {
       "id": "restart-restores-broken-route",
