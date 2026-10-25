@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "verify": "npm test && npm run build && node scripts/check-release.mjs",
+    "deploy:safety": "node scripts/check-deploy-safety.mjs",
     "release:check": "npm run verify && node scripts/check-release.mjs --strict"
   },
   "devDependencies": {

@@ -106,7 +106,8 @@ npm run preview -- --host 127.0.0.1 --port 5387
 - `tests/snow.test.ts`：62 项测试，覆盖八关反例/有效替代解、CRC 独立向量、TTL 转发边界、真实模型预算、事务、伪造存档、旧存档迁移、重玩资格、跨帧率风力、冰桥跌落与全部主桥/三段最终路线。
 - `tests/dune.test.ts`：86项新增测试，覆盖十关反例/有效替代解、库存有界搜索、提交日志身份、重复恢复、分布桶精度、七系统回归、灰度、严格存档与旧版迁移、风力/地形、最近遮挡镜头。
 - `scripts/check-release.mjs`：文档本地链接、构建静态资产、开发工具隔离和已审核源码指纹核验。
-- `.github/workflows/verify.yml`：Node 24 下干净安装并执行发布检查，仓库权限只读。
+- `scripts/check-deploy-safety.mjs`：Vercel 部署安全检查。核验构建脚本可复现、`base: './'` 相对路径、产物只含浏览器所需文件、源码与测试不泄漏进 `dist/`、生产包无开发钩子，以及 `e2e/` 的 playwright 依赖声明。
+- `.github/workflows/verify.yml`：Node 24 下干净安装并执行发布检查与部署安全检查，仓库权限只读。
 - `qa/viewport.html`：本地响应式验收画框，不纳入正式构建。
 
 采用 Three.js 直接管理渲染，不引入 React 的逐帧状态更新。重复楼体使用 [InstancedMesh](https://threejs.org/docs/pages/InstancedMesh.html)。角色碰撞选用文档允许的轻量 kinematic controller，任务模拟与视觉帧率独立。
@@ -127,4 +128,33 @@ npm run preview -- --host 127.0.0.1 --port 5387
 
 尚未实现：剩余三主城与 ROOT 终章、完整跨城依赖 DAG、战斗与钩锁、手柄、通用动态物理、全量 glTF/LOD 流送和完整剧情音轨。地图标记规划项，不声称具有 5–8 小时内容。第二至第五城按首次进入延迟构建，只渲染当前场景；五个场景缓存供往返使用，尚未实现全量城市流送。当前 JS 主包约 895 kB（gzip约259 kB），CSS约95 kB（gzip约20 kB），构建仍提示 500 kB 分块建议，未关闭该提示。
 
+
 老项目主入口保留在 `legacy-v5.html`，代码仍在 `src/main.ts`、`src/v5/`，旧说明保留在 `docs/v6/LEGACY_V5_README.md`。正式首页改为 V6；正式构建只打包 V6。
+
+## 线上部署（Vercel）
+
+本项目由 **Vercel 托管**：任何进入 `main` 的改动都会触发一次自动构建与部署。仓库内没有 `vercel.json`，构建命令、输出目录与 Node 版本都配置在 Vercel 项目的设置里。
+
+当前仓库按以下约定组织，Vercel 侧应保持一致：
+
+| 项 | 值 | 原因 |
+| --- | --- | --- |
+| Framework / Build | Vite（`npm run build`） | `build` 先跑 `tsc --noEmit`，类型错误在部署前暴露 |
+| Output Directory | `dist` | Vite 默认输出；`dist/` 只含浏览器所需文件 |
+| Install Command | `npm ci` | 依赖 `package-lock.json` 才能复现 |
+| Node | 24 及以上 | `engines.node` 要求，且构建工具链按 24 验证 |
+
+改动时请遵守：
+
+1. **不要改动 `vite.config.ts` 的 `base: './'`。** 相对路径让同一份产物既能挂在根路径也能挂在子路径；改成 `'/'` 会在子路径部署时让所有资源 404。
+2. **不要把源码、测试或脚本放进 `dist/`。** `public/` 下的内容会被原样复制进产物，放错文件等于把它发布出去。
+3. **不要让开发钩子进入生产包。** `import.meta.env.DEV` 包裹的传送工具不会进包，但直接写成 `window.__city` 就会泄漏；`check-release.mjs` 与 `check-deploy-safety.mjs` 都会拦截。
+4. **不要提交体积大的测试产物。** 端到端截图不进版本库（`.gitignore` 已排除 `artifacts/guide/`），否则每次 Vercel 克隆都要下载它们。验收收据 `artifacts/e2e-*-checks.json` 体积很小，保留。
+5. **改动源码后发布门禁会拒绝。** `check-release.mjs --strict` 比对已封存的源码指纹，源码一变就失败。这是设计意图：必须重跑受影响的界面验收并 `--seal` 重新封存，而不是绕过它。
+
+提交前建议本地跑一次：
+
+```sh
+npm run verify          # 测试 + 构建 + 发布检查
+npm run deploy:safety   # 部署安全检查
+```
