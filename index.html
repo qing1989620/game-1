@@ -30,6 +30,7 @@
         <p class="menu-description">系统说你不存在。<br>但这座城市，<strong>还在等你修复。</strong></p>
         <p class="menu-sub">从雨港与雪原，走进赤砂档案海。<br class="desktop-break">穿过沙尘与镜面遗迹，让已经确认的承诺不再消失。</p>
         <div class="start-actions"><button id="btn-start" class="primary"><span>进入指针港</span><span class="arrow">↗</span></button><button id="btn-continue" class="text-button" hidden>继续旅程 <span>→</span></button></div>
+        <div class="start-actions-secondary"><button id="btn-how" class="text-button">怎么玩？ <span>↗</span></button></div>
         <div class="menu-controls"><span><kbd>W A S D</kbd> 探索</span><span><kbd>Q</kbd> 溯源</span><span><kbd>E</kbd> 改写</span></div>
       </div>
       <div class="city-caption"><div class="caption-rule"></div><span class="mono">01 / POINTER DOCK</span><h2>指针港</h2><p>一列永远跳过 B 站的列车。<br>一个还在等待的人。</p><div class="coordinate mono">31°24′ N &nbsp; 121°48′ E <span>● SIGNAL LOST</span></div></div>
@@ -39,7 +40,13 @@
     <div id="weather-control" aria-label="天气控制"><span class="mono">WEATHER</span><button id="weather-clear" aria-pressed="false">☀ 晴天</button><button id="weather-rain" aria-pressed="true">☂ 雨天</button></div>
     <section id="hud" hidden aria-label="游戏信息">
       <div class="compass mono" aria-hidden="true"><span>W</span><i></i><span class="compass-n">N</span><i></i><span>E</span></div>
-      <aside class="objective"><div class="objective-kicker mono"><span id="quest-code">PROLOGUE / 00</span><span class="quest-line"></span></div><h2 id="quest-title">找到站长 MIRA</h2><p id="quest-description">沿着港口灯带向前。有人在等你。</p><div class="quest-distance mono" id="quest-distance"></div><button class="objective-hint" id="btn-hint">需要一点线索？ <span>↗</span></button><button id="btn-forge-travel" class="text-button" hidden>乘城际列车 · 前往脉冲炉 →</button></aside>
+      <aside class="objective"><div class="objective-kicker mono"><span id="quest-code">PROLOGUE / 00</span><span class="quest-line"></span></div><h2 id="quest-title">找到站长 MIRA</h2><p id="quest-description">沿着港口灯带向前。有人在等你。</p><div class="quest-distance mono" id="quest-distance"></div><button class="objective-hint" id="btn-hint">需要一点线索？ <span>↗</span></button><button id="btn-forge-travel" class="text-button" hidden>乘城际列车 · 前往脉冲炉 →</button>
+        <div id="coach" class="coach" hidden aria-live="polite">
+          <div class="coach-kicker mono"><span>下一步 / NEXT</span></div>
+          <p class="coach-label"><kbd id="coach-key">Q</kbd><span id="coach-action">扫描坏站台取证</span></p>
+          <p class="coach-hint" id="coach-hint"></p>
+        </div>
+      </aside>
       <div id="world-markers"></div>
       <div id="interact-prompt" hidden><button id="btn-interact"><kbd>E</kbd><span id="interact-label">与 MIRA 对话</span><span class="prompt-arrow">↗</span></button></div>
       <div class="identity"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M20 4a12 12 0 1 1-10 0"/><circle cx="15" cy="15" r="2"/></svg><div><b>NULL · ZERO</b><span class="mono" id="identity-status">身份未知 / UNKNOWN</span></div><div class="identity-bars"><i></i><i></i><i></i></div></div>
@@ -50,7 +57,7 @@
     </section>
     <section id="patch-panel" hidden aria-label="因果织针工作台">
       <div class="patch-header"><div class="eyebrow">CAUSAL NEEDLE <span>● BREAKPOINT</span></div><button id="btn-close-patch" class="close-button" aria-label="退出断点编辑">×</button></div>
-      <div class="patch-body"><span id="patch-code" class="mono">Q-01 / EVENT ORDER</span><h2 id="patch-title">先离开，再消失。</h2><p id="patch-description"></p><div id="patch-observation"></div><div id="patch-editor"></div><button id="btn-preview" class="preview-button">预演未来 <span>↗</span></button><button id="btn-verify" class="primary verify"><span>重放并验证 <kbd>R</kbd></span><span>→</span></button><button id="btn-undo" class="text-button">撤销草案 <span>↶</span></button><p class="patch-foot">局部时间已冻结。你可以安心思考。</p></div>
+      <div class="patch-body"><span id="patch-code" class="mono">Q-01 / EVENT ORDER</span><h2 id="patch-title">先离开，再消失。</h2><p id="patch-description"></p><div id="patch-coach" class="patch-coach"><span class="patch-coach-kicker mono">下一步 / NEXT</span><p class="patch-coach-label"><kbd id="patch-coach-key">R</kbd><span id="patch-coach-action"></span></p><p class="patch-coach-hint" id="patch-coach-hint"></p></div><div id="patch-observation"></div><div id="patch-editor"></div><button id="btn-preview" class="preview-button">预演未来 <span>↗</span></button><button id="btn-verify" class="primary verify"><span>重放并验证 <kbd>R</kbd></span><span>→</span></button><button id="btn-undo" class="text-button">撤销草案 <span>↶</span></button><p class="patch-foot">局部时间已冻结。你可以安心思考。</p></div>
     </section>
     <div id="patch-nodes" hidden aria-label="三维车站因果节点"></div>
     <section id="proof-panel" hidden aria-live="polite"><div class="proof-top"><span id="proof-label" class="mono">ASSERTION REPORT</span><button id="btn-close-proof" class="close-button" aria-label="收起验证报告">×</button></div><h3 id="proof-title"></h3><p id="proof-reason"></p><div id="proof-checks"></div><div id="proof-log" class="mono"></div><button id="btn-proof-action" class="text-button">继续实验 <span>→</span></button></section>

@@ -4,6 +4,7 @@ import { CityView } from './view';
 import { A_CHECKPOINT, CHECKPOINTS, DOCK_BOUNDS, Motor, type V3 } from './physics';
 import { GameInput } from './input';
 import { CityAudio } from './audio';
+import { patchCoach, playCoach, readOnboarded, writeOnboarded, type CoachContext } from './coach';
 import { MIRA_POS, NODE_POS, REORDER_POS, STATION_POS } from './world';
 import { ForgeChapter } from './forge-chapter';
 import type { Weather } from './forge-domain';
@@ -46,6 +47,7 @@ let modalType:string|null=null;
 let priorFocus:HTMLElement|null=null;
 let dialogueIndex=-1;
 let hintCount=0;
+let pendingStart=false;
 let hudAccumulator=0;
 let persistAccumulator=0;
 let saved=readProgress();
@@ -150,10 +152,10 @@ function goal():{pos:V3;label:string;code:string;title:string;description:string
   return {pos:STATION_POS.END,label:'END / 城际列车',code:'CHAPTER 01 / RESTORED',title:'下一站，脉冲炉',description:'指针港已经恢复。前往 END 站按 E，或点击下方按钮乘城际列车。'};
 }
 function updateHud():void {
-  if(dune.active){dune.updateHud();return;}
-  if(snow.active){snow.updateHud();return;}
-  if(thread.active){thread.updateHud();return;}
-  if(forge.active){forge.updateHud();return;}
+  if(dune.active){dune.updateHud();updateCoach();return;}
+  if(snow.active){snow.updateHud();updateCoach();return;}
+  if(thread.active){thread.updateHud();updateCoach();return;}
+  if(forge.active){forge.updateHud();updateCoach();return;}
   const g=goal();setText('quest-code',g.code);setText('quest-title',g.title);setText('quest-description',g.description);
   const d=distance(motor.position,g.pos);setText('quest-distance',`${d<6?'◇ 已抵达':'↗ '+Math.round(d)+' m'}  /  ${g.label}`);
   setText('identity-status',campaign.data.chapter==='meet'?'身份未知 / UNKNOWN':'因果织针 / 已连接');
@@ -168,6 +170,27 @@ function updateHud():void {
     if(p.visible) {const marker=document.createElement('div');marker.className='world-marker'+(campaign.data.chapter==='rail'?' error':'');marker.style.left=`${p.x}px`;marker.style.top=`${p.y}px`;marker.innerHTML=`<span>${g.label}</span><i></i>`;markers.append(marker);}
     if(scanUntil>now&&campaign.data.chapter==='rail')for(const id of STATIONS){const p=view.project(NODE_POS[id]);if(p.visible){const m=document.createElement('div');m.className='world-marker'+(id==='B'?' error':'');m.style.left=`${p.x}px`;m.style.top=`${p.y}px`;m.innerHTML=`<span>${id}${id==='B'?' / 无列车停靠':''}</span><i></i>`;markers.append(m);}}
   }
+  updateCoach();
+}
+/**
+ * Name the single next action, based on live state. Reads whichever city is
+ * loaded, so the guide never shows pointer-dock advice inside another city.
+ */
+function updateCoach():void {
+  const card=$('coach');
+  if(mode!=='play'||modalType!==null){card.hidden=true;return;}
+  const step=playCoach(coachContext());
+  if(!step){card.hidden=true;return;}
+  card.hidden=false;
+  setText('coach-key',step.key);setText('coach-action',step.label);setText('coach-hint',step.hint);
+}
+function coachContext():CoachContext {
+  const d=campaign.data;
+  if(view.city==='dune')return {city:'dune',phase:d.dune.phase,evidence:d.dune.evidence,completed:d.dune.completed};
+  if(view.city==='forge')return {city:'forge',phase:d.forge.phase,evidence:d.forge.evidence};
+  if(view.city==='thread')return {city:'thread',phase:d.thread.phase,evidence:d.thread.evidence};
+  if(view.city==='snow')return {city:'snow',phase:d.snow.phase,evidence:d.snow.evidence,delivery:d.snow.delivery};
+  return {city:'dock',chapter:d.chapter,evidence:d.evidence};
 }
 function nearInteraction():{kind:string;label:string}|null {
   const p=motor.position,c=campaign.data.chapter;
@@ -228,6 +251,8 @@ function openPatch(id:'Q-01'|'DS-01'):void {
   setText('patch-code',id==='Q-01'?'Q-01 / EVENT ORDER':'DS-01 / LINKED TRANSIT');
   setText('patch-title',id==='Q-01'?'先离开，再消失。':'找回被跳过的一站。');
   setText('patch-description',id==='Q-01'?'拖动事件卡片，改变发生顺序。旅客必须安全离开，生还记录也不能丢失。':'拖动三维节点的因果线，改写下一站。你也可以点选源节点，再点目标站。');
+  const coach=patchCoach(id);
+  setText('patch-coach-key',coach.key);setText('patch-coach-action',coach.label);setText('patch-coach-hint',coach.hint);
   $('patch-observation').innerHTML=id==='Q-01'?'<div class="observation"><small class="mono">OBSERVED / 观察到的顺序</small><strong>DELETE → EXIT → ARCHIVE</strong><p>站台消失时，旅客还没有离开。</p></div>':`<div class="observation"><small class="mono">OBSERVED / 实际停靠</small><strong>${traverse(campaign.data.rail).route.join(' → ')}</strong><p>B 站：有旅客等待，未收到列车。</p></div>`;
   renderEditor();renderNodes();world.showDraft(id==='DS-01'?draftRail:null);audio.cue('select');
   $('btn-close-patch').focus({preventScroll:true});$('patch-panel').scrollTop=0;
@@ -371,6 +396,18 @@ function openModal(type:string):void {
     $('map-thread').onclick=()=>{if(thread.active){closeModal();thread.openJournal();}else enterThread();};
     $('map-snow').onclick=()=>{if(snow.active){closeModal();snow.openJournal();}else enterSnow();};
     $('map-dune').onclick=()=>{if(dune.active){closeModal();dune.openJournal();}else enterDune();};
+  } else if(type==='coach') {
+    content.innerHTML='<div class="eyebrow">HOW TO PLAY / 上手四步</div><h2 id="modal-title">你不战斗。你修因果。</h2>'+
+      '<p class="coach-loop">这座城市按因果运行。你的任务不是打赢它，而是<b>找到哪里先错了，把它改成对的，然后让世界重放一遍</b>。</p>'+
+      '<ol class="coach-steps">'+
+      '<li><b>走过去</b><span>WASD 移动，右键拖动转视角。屏幕左上角始终告诉你下一步去哪。</span></li>'+
+      '<li><b>按 Q 扫描</b><span>靠近异常点扫描取证。<b>没扫描就无法编辑</b>——这是硬性前置条件。</span></li>'+
+      '<li><b>按 E 打断点</b><span>局部时间冻结。拖动事件卡片改顺序，或重连车站指针。</span></li>'+
+      '<li><b>按 R 重放验证</b><span>失败会给一条可复现的反例，告诉你错在哪。<b>不扣次数，不丢证据。</b></span></li>'+
+      '</ol>'+
+      '<p class="modal-rule">每个谜题都不止一个正确答案——只要世界最终是对的，验证就会通过。</p>'+
+      '<div class="modal-actions"><button class="primary" id="modal-resume">明白了 <span>→</span></button></div>';
+    writeOnboarded();
   } else content.innerHTML='<div class="eyebrow">RE:FLOW 404 / 断点之城</div><h2 id="modal-title">一个错误，也有存在的意义。</h2><p>CIVITAS 是一座运行中的城市。路网是数据结构，列车是执行事件，居民的名字是一条不能丢失的记录。<br>当清除署决定删除异常，零号选择先听懂它们。</p><p>当前开放指针港、脉冲炉、千线程、雨线城白噪雪原和镜库城赤砂档案海五城。第五城用赤色沙海与青蓝镜面遗迹呈现六条数据系统主线和四份遗留故障：沙尘暴中用G偏振镜取证、F稳身，最后完成跨城回归、灰度回滚及16米档案井切换。关卡从局部因果逐渐进入并发、网络与生产数据承诺。其余三城仍在规划中。</p><p class="modal-rule">城市、角色与声音由原创程序生成。运行中无需登录，不上传存档，不调用 AI 或第三方服务。存档仅保留在当前浏览器。</p><div class="modal-actions"><button class="primary" id="modal-resume">回到世界 <span>→</span></button><button class="text-button" id="modal-card-link">查看零号设定卡 ↗</button></div>';
   $('modal-resume')?.addEventListener('click',closeModal);
   $('modal-checkpoint')?.addEventListener('click',()=>{closeModal();if(dune.active){dune.action('Escape');motor.warp(motor.checkpoint);if(!dune.blocked)view.mode='follow';toast('已回到镜库城最近的安全锚点。');return;}if(snow.active){snow.action('Escape');motor.warp(motor.checkpoint);if(!snow.blocked)view.mode='follow';toast('已回到最近交接的雪原避风点。');return;}if(thread.active){thread.action('Escape');motor.warp(motor.checkpoint);if(!thread.blocked)view.mode='follow';toast('已回到千线程最近的安全检查点。');return;}if(forge.active){forge.action('Escape');motor.warp(motor.checkpoint);if(!forge.blocked)view.mode='follow';toast('已回到脉冲炉最近的安全检查点。');return;}if(mode==='patch')closePatch();if(mode==='cinema'){toast('请先结束当前列车回放。');return;}motor.warp(motor.checkpoint);view.mode='follow';toast('已回到最近的安全检查点。');});
@@ -384,7 +421,11 @@ function openModal(type:string):void {
   requestAnimationFrame(()=>$('btn-close-modal').focus());
 }
 function closeModal():void {
-  if(!modalType)return;modalType=null;show('modal-layer',false);audio.setPaused(document.hidden);input.clear();priorFocus?.focus({preventScroll:true});
+  if(!modalType)return;
+  const wasOrientation=modalType==='coach'&&pendingStart;
+  modalType=null;show('modal-layer',false);audio.setPaused(document.hidden);input.clear();priorFocus?.focus({preventScroll:true});
+  // Closing the orientation by any route still lets the player in.
+  if(wasOrientation){pendingStart=false;start();}
 }
 function applySettings():void {
   saveSettings(settings);view.applySettings(settings);
@@ -392,7 +433,7 @@ function applySettings():void {
   $('btn-sound').setAttribute('aria-label',`声音：${settings.sound?'开':'关'}`);$('btn-sound').setAttribute('aria-pressed',String(settings.sound));
 }
 
-$('btn-start').onclick=()=>start();$('btn-continue').onclick=()=>start(true);$('btn-interact').onclick=interact;$('tool-patch').onclick=interact;
+$('btn-start').onclick=()=>{if(readOnboarded())start();else{pendingStart=true;openModal('coach');}};$('btn-continue').onclick=()=>start(true);$('btn-interact').onclick=interact;$('tool-patch').onclick=interact;
 $('btn-dialogue').onclick=()=>advanceDialogue();$('tool-trace').onclick=scan;$('touch-scan').onclick=scan;
 $('btn-hint').onclick=hint;$('btn-close-patch').onclick=closePatch;$('btn-preview').onclick=preview;$('btn-verify').onclick=verify;
 $('btn-undo').onclick=()=>{draftRail=structuredClone(campaign.data.rail);draftOrder=[...campaign.data.order];renderEditor();world.showDraft(patchCase==='DS-01'?draftRail:null);renderNodes();show('proof-panel',false);toast('草案已撤销，原始证据保留。');};
@@ -401,6 +442,7 @@ $('btn-skip-replay').onclick=finishCinema;$('btn-restart').onclick=()=>start();
 $('btn-roam').onclick=()=>{setMode('play');view.mode='follow';toast('城市还在运行。欢迎留下来。');};
 $('btn-copy-result').onclick=async()=>{const record=`RE:FLOW 404 · 指针港修复记录\n用时 ${clock(campaign.data.elapsed)} / ${campaign.data.attempts} 次实验 / ${campaign.data.counterexamples} 个反例\n线路：${traverse(campaign.data.rail).route.join(' → ')}\n系统找不到，不代表不存在。`;try{await navigator.clipboard.writeText(record);toast('修复记录已复制。');}catch{toast('浏览器未开放剪贴板权限。你可以截图保存结算。');}};
 $('btn-settings').onclick=()=>openModal('settings');$('btn-help').onclick=()=>openModal('help');$('btn-about').onclick=()=>openModal('about');
+$('btn-how').onclick=()=>openModal('coach');
 $('btn-next-city').onclick=enterForge;$('btn-forge-travel').onclick=enterForge;
 $('weather-clear').onclick=()=>changeWeather('clear');$('weather-rain').onclick=()=>changeWeather('rain');
   $('btn-map').onclick=$('tool-map').onclick=()=>{if(dune.active)dune.openJournal();else if(snow.active)snow.openJournal();else if(thread.active)thread.openJournal();else openModal('map');};$('btn-pause').onclick=()=>{persist();openModal('pause');};

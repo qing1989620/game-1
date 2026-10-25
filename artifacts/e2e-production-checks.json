@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-25",
+  "method": "Playwright against production dist; no state injection, no dev teleport hooks",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "checks": [
+    {
+      "id": "prod-menu",
+      "pass": true,
+      "detail": "mode=menu menu=true start=true"
+    },
+    {
+      "id": "prod-no-dev-hooks",
+      "pass": true,
+      "detail": "生产包不含 __city 开发传送钩子"
+    },
+    {
+      "id": "prod-orientation-gate",
+      "pass": true,
+      "detail": "主菜单本身不弹引导（引导在点开始后出现）"
+    },
+    {
+      "id": "prod-orientation",
+      "pass": true,
+      "detail": "引导弹出=true 步骤=4 此刻仍在菜单=true"
+    },
+    {
+      "id": "game-started",
+      "pass": true,
+      "detail": "mode=play chapter=meet"
+    },
+    {
+      "id": "reach-mira",
+      "pass": true,
+      "detail": "z=17.9 interactPrompt=true"
+    },
+    {
+      "id": "mira-dialogue",
+      "pass": true,
+      "detail": "chapter=reorder（4 次 E 后应推进到 reorder）"
+    },
+    {
+      "id": "scan-Q-01",
+      "pass": true,
+      "detail": "evidence=[\"Q-01\"]"
+    },
+    {
+      "id": "open-patch-Q01",
+      "pass": true,
+      "detail": "panel=true code=Q-01 / EVENT ORDER"
+    },
+    {
+      "id": "preview-isolated",
+      "pass": true,
+      "detail": "label=\"COUNTERFACTUAL / 未提交 · Q-01:preview\" chapter=reorder order=DELETE,EXIT,ARCHIVE"
+    },
+    {
+      "id": "order-counterexample",
+      "pass": true,
+      "detail": "title=\"世界给出了反例\" reason=\"站台在旅客撤离前被删除。\" counterexamples=1"
+    },
+    {
+      "id": "order-commit-replay",
+      "pass": true,
+      "detail": "firstEvent=EXIT chapter=rail passed=true route="
+    },
+    {
+      "id": "walk-to-elevated-A",
+      "pass": true,
+      "detail": "y=13.00 z=-43.48 chapter=rail bridge=true"
+    },
+    {
+      "id": "scan-DS-01",
+      "pass": true,
+      "detail": "evidence=[\"Q-01\",\"DS-01\"]"
+    },
+    {
+      "id": "open-patch-DS01",
+      "pass": true,
+      "detail": "code=DS-01 / LINKED TRANSIT"
+    },
+    {
+      "id": "rail-cycle-rejected",
+      "pass": true,
+      "detail": "summary=\"A.next → A\" reason=\"循环发生在 A 站，列车无法抵达终点。\" authorityA=C"
+    },
+    {
+      "id": "3d-node-drag",
+      "pass": true,
+      "detail": "拖拽后 summary=\"A.next → B\"（草案 A.next→B，权威快照仍为 C）"
+    },
+    {
+      "id": "rail-commit-replay",
+      "pass": true,
+      "detail": "summary=\"A.next → B\" chapter=board committedA=B route=A,B,C,END"
+    },
+    {
+      "id": "train-to-result",
+      "pass": true,
+      "detail": "chapter=complete mode=result elapsed=28.9s route=A→B→C→END"
+    },
+    {
+      "id": "restart-restores-broken-route",
+      "pass": true,
+      "detail": "chapter=meet A=C evidence=0 order=DELETE,EXIT,ARCHIVE"
+    },
+    {
+      "id": "pause-dialog",
+      "pass": true,
+      "detail": "modal=\"LOCAL TIME / FROZEN城市会等你。时间、列车和因果事件均已暂停。\""
+    },
+    {
+      "id": "map-panel",
+      "pass": true,
+      "detail": "modal=\"CIVITAS / 04 OF 08 CITIES OPEN指针港 · 因果地图\" largeMap=true"
+    },
+    {
+      "id": "sound-enable",
+      "pass": true,
+      "detail": "aria-pressed=true audioOn=true"
+    },
+    {
+      "id": "sound-disable",
+      "pass": true,
+      "detail": "aria-pressed=false audioOn=false"
+    },
+    {
+      "id": "no-browser-errors",
+      "pass": true,
+      "detail": "错误 0 条 "
+    }
+  ],
+  "finalConsoleErrors": []
+}
