@@ -2,6 +2,7 @@ import { freshForge, parseForge, type ForgeProgress, type Weather } from './forg
 import { freshThread, parseThread, type ThreadProgress } from './thread-domain';
 import { freshSnow, parseSnow, type SnowProgress } from './snow-domain';
 import { freshDune, parseDune, runDuneAudit, type DuneProgress } from './dune-domain';
+import {freshGrove,parseGrove,runGroveAudit,type GroveProgress} from './grove-domain';
 /** V6 authority. All experiments are isolated snapshots; only proven results commit. */
 export type Station = 'A' | 'B' | 'C' | 'END';
 export type EventAction = 'EXIT' | 'DELETE' | 'ARCHIVE';
@@ -92,7 +93,7 @@ export function runOrder(order: readonly EventAction[], runId = 'Q-01:observe'):
 export type Chapter = 'meet' | 'reorder' | 'rail' | 'board' | 'complete';
 export interface Progress {
   version: 6;
-  city: 'dock' | 'forge' | 'thread' | 'snow' | 'dune';
+  city: 'dock' | 'forge' | 'thread' | 'snow' | 'dune' | 'grove';
   weather: Weather;
   forge: ForgeProgress;
   forgeClearance: ForgeProgress | null;
@@ -101,6 +102,9 @@ export interface Progress {
   snow: SnowProgress;
   snowClearance: SnowProgress | null;
   dune: DuneProgress;
+  duneClearance: DuneProgress | null;
+  finalePending: boolean;
+  grove: GroveProgress;
   chapter: Chapter;
   elapsed: number;
   attempts: number;
@@ -109,7 +113,7 @@ export interface Progress {
   rail: RailState;
   evidence: string[];
 }
-export const freshProgress = (): Progress => ({ version: 6, city: 'dock', weather: 'rain', forge: freshForge(), forgeClearance:null, thread: freshThread(), threadClearance:null, snow:freshSnow(), snowClearance:null, dune:freshDune(), chapter: 'meet', elapsed: 0, attempts: 0,
+export const freshProgress = (): Progress => ({ version: 6, city: 'dock', weather: 'rain', forge: freshForge(), forgeClearance:null, thread: freshThread(), threadClearance:null, snow:freshSnow(), snowClearance:null, dune:freshDune(), duneClearance:null, finalePending:false, grove:freshGrove(), chapter: 'meet', elapsed: 0, attempts: 0,
   counterexamples: 0, order: [...INITIAL_ORDER], rail: structuredClone(INITIAL_RAIL), evidence: [] });
 export const CHAPTERS: Chapter[] = ['meet', 'reorder', 'rail', 'board', 'complete'];
 
@@ -159,20 +163,27 @@ export function parseProgress(raw: unknown): Progress | null {
   const thread = parseThread(p.thread);
   const snow = parseSnow(p.snow);
   const dune = parseDune(p.dune);
+  const grove = p.grove===undefined?freshGrove():parseGrove(p.grove);
   const forgeClearance=p.forgeClearance===undefined?(forge?.phase==='complete'?structuredClone(forge):null):p.forgeClearance===null?null:parseForge(p.forgeClearance);
   const threadClearance=p.threadClearance===undefined?(thread?.phase==='complete'?structuredClone(thread):null):p.threadClearance===null?null:parseThread(p.threadClearance);
   const snowClearance=p.snowClearance===undefined?(snow?.phase==='complete'?structuredClone(snow):null):p.snowClearance===null?null:parseSnow(p.snowClearance);
-  const advanced=p.city==='dune'||dune?.phase!=='arrival'||snowClearance!==null;
+  const duneClearance=p.duneClearance===undefined?(dune?.phase==='complete'?structuredClone(dune):null):p.duneClearance===null?null:parseDune(p.duneClearance);
+  const advanced=p.city==='dune'||p.city==='grove'||dune?.phase!=='arrival'||snowClearance!==null;
   if((p.forgeClearance!=null&&!forgeClearance)||(forgeClearance&&forgeClearance.phase!=='complete'))return null;
   if((p.threadClearance!=null&&!threadClearance)||(threadClearance&&threadClearance.phase!=='complete'))return null;
   if((p.snowClearance!=null&&!snowClearance)||(snowClearance&&snowClearance.phase!=='complete'))return null;
-  if (!forge || !thread || !snow || !dune || (p.city !== undefined && !['dock','forge','thread','snow','dune'].includes(p.city)) ||
+  if((p.duneClearance!=null&&!duneClearance)||(duneClearance&&duneClearance.phase!=='complete'))return null;
+  if(p.finalePending!==undefined&&(typeof p.finalePending!=='boolean'||(p.finalePending&&(p.city!=='dune'||dune?.phase!=='complete'))))return null;
+  if (!forge || !thread || !snow || !dune || !grove || (p.city !== undefined && !['dock','forge','thread','snow','dune','grove'].includes(p.city)) ||
     (p.weather !== undefined && p.weather !== 'rain' && p.weather !== 'clear') ||
     ((advanced || p.city === 'forge' || p.city === 'thread' || p.city === 'snow' || forge.phase !== 'arrival' || forgeClearance!==null || threadClearance!==null || snow.phase!=='arrival') && p.chapter !== 'complete') ||
     ((advanced || p.city === 'thread' || p.city === 'snow' || thread.phase !== 'arrival' || threadClearance!==null || snow.phase!=='arrival') && forge.phase !== 'complete' && !forgeClearance) ||
     ((advanced || p.city === 'snow' || snow.phase!=='arrival') && thread.phase!=='complete' && !threadClearance) ||
-    ((p.city==='dune'||dune.phase!=='arrival') && snow.phase!=='complete'&&!snowClearance)) return null;
+    ((p.city==='dune'||p.city==='grove'||dune.phase!=='arrival') && snow.phase!=='complete'&&!snowClearance) ||
+    ((p.city==='grove'||grove.phase!=='arrival')&&dune.phase!=='complete'&&!duneClearance)) return null;
   if(dune.audited&&!runDuneAudit(dune,(snow.phase==='complete'?snow:snowClearance!).patches['NET-02']).passed)return null;
+  if(duneClearance?.audited&&!runDuneAudit(duneClearance,(snow.phase==='complete'?snow:snowClearance!).patches['NET-02']).passed)return null;
+  if(grove.audited&&!runGroveAudit(grove).passed)return null;
   if (p.version !== 6 || !CHAPTERS.includes(p.chapter) || !Number.isFinite(p.elapsed) || p.elapsed < 0 ||
     !Number.isInteger(p.attempts) || p.attempts < 0 || !Number.isInteger(p.counterexamples) || p.counterexamples < 0 ||
     !Array.isArray(p.evidence) || p.evidence.some(e => !['Q-01', 'DS-01'].includes(e)) || !Array.isArray(p.order)) return null;
@@ -183,7 +194,7 @@ export function parseProgress(raw: unknown): Progress | null {
   if (CHAPTERS.indexOf(p.chapter) >= 2 && (!runOrder(p.order).passed || !p.evidence.includes('Q-01'))) return null;
   if (CHAPTERS.indexOf(p.chapter) >= 3 && (!runRail(p.rail).passed || !p.evidence.includes('DS-01'))) return null;
   // Reconstruct known fields, so prototypes and unrelated data never reach the engine.
-  return { version: 6, city: p.city ?? 'dock', weather: p.weather ?? 'rain', forge, forgeClearance, thread, threadClearance, snow, snowClearance, dune, chapter: p.chapter, elapsed: p.elapsed, attempts: p.attempts, counterexamples: p.counterexamples,
+  return { version: 6, city: p.city ?? 'dock', weather: p.weather ?? 'rain', forge, forgeClearance, thread, threadClearance, snow, snowClearance, dune, duneClearance, finalePending:p.finalePending??false, grove, chapter: p.chapter, elapsed: p.elapsed, attempts: p.attempts, counterexamples: p.counterexamples,
     order: [...p.order], evidence: [...p.evidence], rail: { head: 'A', next: { ...p.rail.next } } };
 }
 export function readProgress(): Progress | null {

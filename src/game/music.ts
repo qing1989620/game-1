@@ -11,7 +11,7 @@
  * ships without any audio asset and the licence file only has to cover three.js.
  */
 
-export type MusicCity = 'dock' | 'forge' | 'thread' | 'snow' | 'dune';
+export type MusicCity = 'dock' | 'forge' | 'thread' | 'snow' | 'dune' | 'grove';
 
 /** One synthesised voice, with its start offset relative to the step it belongs to. */
 export interface MusicVoice {
@@ -49,11 +49,12 @@ const PROGRESSIONS: Record<MusicCity, { dark: number[][]; lit: number[][] }> = {
   snow: { dark: [[5, 8, 12], [1, 5, 8], [-2, 1, 5], [5, 8, 12]], lit: [[5, 9, 12], [1, 5, 9], [-2, 2, 5], [5, 9, 12]] },
   // Phrygian: the flat second is what makes the dunes sound like dunes.
   dune: { dark: [[5, 8, 12], [6, 10, 13], [3, 7, 10], [0, 3, 7]], lit: [[5, 9, 12], [6, 10, 13], [3, 7, 10], [0, 4, 7]] },
+  grove: { dark: [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]], lit: [[0, 4, 7], [-4, 0, 4], [3, 7, 10], [-2, 2, 7]] },
 };
 
 /** Eighth-note tempo per city. Snow is slowest; the forge runs hot. */
 export const CITY_TEMPO: Record<MusicCity, number> = {
-  dock: 88, forge: 110, thread: 104, snow: 68, dune: 76,
+  dock: 88, forge: 110, thread: 104, snow: 68, dune: 76, grove: 64,
 };
 
 /** Seconds per scheduled step (an eighth note). */
@@ -66,6 +67,7 @@ const MELODY: Record<MusicCity, { dark: number[]; lit: number[] }> = {
   thread: { dark: [3, 7, 12, 10, 3, 0, 7, -2], lit: [3, 7, 12, 17, 19, 17, 12, 7] },
   snow: { dark: [0, 3, 5, 8, 0, -4, 3, -7], lit: [0, 5, 8, 12, 17, 12, 8, 5] },
   dune: { dark: [3, 5, 12, 8, 3, -2, 5, -7], lit: [3, 8, 12, 17, 19, 17, 12, 8] },
+  grove: { dark: [0, 3, 5, 8, 0, -4, 3, -7], lit: [0, 5, 8, 12, 17, 12, 8, 5] },
 };
 
 /** Melody rests, so the line breathes instead of looping eight even notes. */
@@ -97,7 +99,7 @@ export function musicVoices(city: MusicCity, recovered: boolean, beat: number): 
   // harmony sustains across the bar rather than pumping on every note.
   if (beat % 8 === 0) {
     const chord = chordFor(city, recovered, beat);
-    const padGain = city === 'snow' ? 0.036 : 0.046;
+    const padGain = city === 'snow' || city === 'grove' ? 0.036 : 0.046;
     for (const semitone of chord) {
       voices.push({ offset: 0, freq: hz(semitone), dur: 4.4, gain: padGain, wave: 'sine' });
     }
@@ -105,7 +107,7 @@ export function musicVoices(city: MusicCity, recovered: boolean, beat: number): 
   }
 
   // Pulse. The snowfield has no percussion — wind is its pulse.
-  if (beat % 4 === 0 && city !== 'snow') {
+  if (beat % 4 === 0 && city !== 'snow' && city !== 'grove') {
     voices.push({ offset: 0, freq: city === 'dune' ? 46 : 43, dur: 0.16, gain: 0.08, wave: 'sine' });
   }
 

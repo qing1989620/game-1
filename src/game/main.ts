@@ -11,6 +11,8 @@ import type { Weather } from './forge-domain';
 import { ThreadChapter } from './thread-chapter';
 import { SnowChapter } from './snow-chapter';
 import { DuneChapter } from './dune-chapter';
+import {DUNE_MAIN} from './dune-domain';
+import {GroveChapter} from './grove-chapter';
 import { LightGuidance } from './guidance';
 
 const $ = <T extends HTMLElement = HTMLElement>(id:string):T => document.getElementById(id) as T;
@@ -52,6 +54,7 @@ let pendingStart=false;
 let hudAccumulator=0;
 let persistAccumulator=0;
 let saved=readProgress();
+let previewGrove=false;
 let proof:RunResult|null=null;
 let sourceDrag:{node:Exclude<Station,'END'>;x:number;y:number;moved:boolean}|null=null;
 let eventDrag:{action:EventAction;startY:number;centers:number[];element:HTMLElement}|null=null;
@@ -60,9 +63,11 @@ const forge=new ForgeChapter({campaign:()=>campaign,view,motor,audio,
   block:on=>{setMode(on?'patch':'play');},persist,toast,clearInput:()=>input.clear(),weather:changeWeather,returnDock,enterThread});
 const thread=new ThreadChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnForge:enterForge,enterSnow,openMap:()=>openModal('map')});
 const snow=new SnowChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnThread:enterThread,enterDune,openMap:()=>openModal('map'),braceHeld:()=>input.keys.has('KeyF')});
-const dune=new DuneChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnSnow:enterSnow,openMap:()=>openModal('map'),braceHeld:()=>input.keys.has('KeyF'),network:()=>{const data=campaign.data;return (data.snow.phase==='complete'?data.snow:data.snowClearance??data.snow).patches['NET-02'];}});
+const dune=new DuneChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnSnow:enterSnow,enterGrove,openMap:()=>openModal('map'),braceHeld:()=>input.keys.has('KeyF'),network:()=>{const data=campaign.data;return (data.snow.phase==='complete'?data.snow:data.snowClearance??data.snow).patches['NET-02'];}});
+const grove=new GroveChapter({campaign:()=>campaign,view,motor,audio,block:on=>setMode(on?'patch':'play'),clearInput:()=>input.clear(),persist,toast,returnDune:()=>previewGrove?start():enterDune(),openMap:()=>openModal('map'),preview:()=>previewGrove,network:()=>{const data=campaign.data;return (data.snow.phase==='complete'?data.snow:data.snowClearance??data.snow).patches['NET-02'];}});
 const guidance=new LightGuidance(hint);
 show('btn-continue',saved!==null);
+show('btn-grove-preview',import.meta.env.DEV);
 const dialogue=[
   '我女儿在 B 站。列车每天经过那里，却再也没有停下来。系统说，那座车站不存在。',
   '你也没有身份记录？那就拿着这枚因果织针吧。按 Q，你会看见城市没来得及说完的话。',
@@ -70,17 +75,18 @@ const dialogue=[
 ];
 
 function setMode(next:typeof mode):void {
-  mode=next;$('app').dataset.mode=next;$('app').dataset.city=view.city;document.body.dataset.city=view.city;show('weather-control',view.city!=='snow'&&view.city!=='dune');
-  const city={dock:{name:'指针港',en:'POINTER DOCK',number:'01'},forge:{name:'脉冲炉',en:'PULSE FORGE',number:'02'},thread:{name:'千线程',en:'THREADFALL',number:'03'},snow:{name:'雨线城 · 白噪雪原',en:'WHITEOUT RELAY',number:'04'},dune:{name:'镜库城 · 赤砂档案海',en:'ARCHIVE DUNES',number:'05'}}[view.city];
-  $('btn-map').setAttribute('aria-label',`打开${city.name}${view.city==='dune'?'故障簿':view.city==='snow'?'勘测册':view.city==='thread'?'任务册':'地图'}`);
+  mode=next;$('app').dataset.mode=next;$('app').dataset.city=view.city;document.body.dataset.city=view.city;show('weather-control',view.city!=='snow'&&view.city!=='dune'&&view.city!=='grove');
+  const city={dock:{name:'指针港',en:'POINTER DOCK',number:'01'},forge:{name:'脉冲炉',en:'PULSE FORGE',number:'02'},thread:{name:'千线程',en:'THREADFALL',number:'03'},snow:{name:'雨线城 · 白噪雪原',en:'WHITEOUT RELAY',number:'04'},dune:{name:'镜库城 · 赤砂档案海',en:'ARCHIVE DUNES',number:'05'},grove:{name:'语法穹顶 · 潮汐红树林',en:'TIDAL MANGROVE',number:'06'}}[view.city];
+  $('btn-map').setAttribute('aria-label',`打开${city.name}${view.city==='grove'?'结局':view.city==='dune'?'故障簿':view.city==='snow'?'勘测册':view.city==='thread'?'任务册':'地图'}`);
   const miniCaption=$('btn-map').querySelector('span')!;miniCaption.textContent=`${city.en} ↗`;
   const sector=$('hud').querySelector('.sector-label')!;
   sector.replaceChildren(document.createTextNode(`${city.name} `),Object.assign(document.createElement('span'),{textContent:`SECTOR ${city.number}`}),document.createElement('i'),$('world-state'));
-  $('mini-svg').setAttribute('viewBox',view.city==='dune'?'-150 -380 320 535':view.city==='snow'?'-145 -350 320 475':view.city==='thread'?'-65 -210 130 270':'-42 -115 115 165');
-  $('mini-svg').querySelector('.map-roads path')!.setAttribute('d',view.city==='dune'?'M-45 112V87H55V-18H-55V-126H65V-347M55-18H109M-55-18H-109M-55-126H-110M65-126H120':view.city==='snow'?'M-100 93V56H0V-39H105V-141H0V-224H-108V-317M0 55V94M0-39H-49M105-141H151':view.city==='thread'?'M0 45V-191M0-44H-28M0-104H28':'M0 40V-49L56-82 18-98M0-49 37-56 56-82M0-43H32V-56M-18 40V-18');
+  $('mini-svg').setAttribute('viewBox',view.city==='grove'?'-80 -270 160 380':view.city==='dune'?'-150 -380 320 535':view.city==='snow'?'-145 -350 320 475':view.city==='thread'?'-65 -210 130 270':'-42 -115 115 165');
+  $('mini-svg').querySelector('.map-roads path')!.setAttribute('d',view.city==='grove'?'M0 80V-230':view.city==='dune'?'M-45 112V87H55V-18H-55V-126H65V-347M55-18H109M-55-18H-109M-55-126H-110M65-126H120':view.city==='snow'?'M-100 93V56H0V-39H105V-141H0V-224H-108V-317M0 55V94M0-39H-49M105-141H151':view.city==='thread'?'M0 45V-191M0-44H-28M0-104H28':'M0 40V-49L56-82 18-98M0-49 37-56 56-82M0-43H32V-56M-18 40V-18');
   if(view.city==='thread'){$('mini-route').setAttribute('d','M0 39V-191');$('mini-route').style.stroke='#83d2e8';}
   if(view.city==='snow'){$('mini-route').setAttribute('d','M-100 93V56H0V-39H105V-141H0V-224H-108V-317');$('mini-route').style.stroke='#af6036';}
   if(view.city==='dune'){$('mini-route').setAttribute('d','M-45 112V87H55V-18H-55V-126H65V-347');$('mini-route').style.stroke='#90dce5';}
+  if(view.city==='grove'){$('mini-route').setAttribute('d','M0 80V-230');$('mini-route').style.stroke='#8ff4d7';}
   eventDrag=null;sourceDrag=null;
   if(next!=='play')$('world-markers').replaceChildren();
   show('menu',next==='menu');show('hud',next==='play'||next==='patch');
@@ -90,7 +96,7 @@ function setMode(next:typeof mode):void {
   show('btn-forge-travel',view.city==='dock'&&campaign.data.chapter==='complete'&&next==='play');
   input.clear();
 }
-function persist():void {saveProgress(campaign.data);saved=structuredClone(campaign.data);show('btn-continue',true);}
+function persist():void {if(previewGrove){try{localStorage.setItem('reflow-404:local-grove-preview-v2',JSON.stringify(campaign.data.grove));}catch{/* private mode */}return;}saveProgress(campaign.data);saved=structuredClone(campaign.data);show('btn-continue',true);}
 function syncWorld():void {
   const chapter=CHAPTERS.indexOf(campaign.data.chapter);
   world.setBridge(chapter>=2);world.setRail(campaign.data.rail,chapter>=3);world.resetTrain();
@@ -101,7 +107,8 @@ function syncWorld():void {
   $('mini-route').style.stroke=chapter>=3?'#8ef7c7':'#e28a7e';
 }
 function start(resume=false):void {
-  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();view.switchCity('dock');campaign=new Campaign(resume&&saved?saved:freshProgress());
+  previewGrove=false;
+  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();view.switchCity('dock');campaign=new Campaign(resume&&saved?saved:freshProgress());
   motor.obstacles=world.obstacles;motor.bounds={...DOCK_BOUNDS};
   motor.reset();motor.warp(CHECKPOINTS[campaign.data.chapter]);view.yaw=0;view.pitch=.34;
   world.showDraft(null);syncWorld();setMode('play');view.mode='follow';
@@ -111,9 +118,12 @@ function start(resume=false):void {
   if(campaign.data.city==='forge'){forge.enter();return;}
   if(campaign.data.city==='thread'){thread.enter();return;}
   if(campaign.data.city==='snow'){snow.enter();return;}
-  if(campaign.data.city==='dune'){dune.enter();return;}
+  if(campaign.data.city==='dune'){dune.enter();if(campaign.data.finalePending)dune.depart();return;}
+  if(campaign.data.city==='grove'){grove.enter();return;}
   toast(resume?'旅程已恢复。检查点就在脚下。':'WASD 移动 · 右键拖动看四周 · 前往站长 MIRA',5);
 }
+function startGrovePreview():void {previewGrove=true;closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();campaign=new Campaign(freshProgress());campaign.data.dune.phase='complete';campaign.data.dune.completed=[...DUNE_MAIN];audio.unlock();audio.setEnabled(settings.sound);audio.setPaused(false);dune.enter();dune.depart();textPreviewReturn();}
+function textPreviewReturn():void {const b=$('grove-return');b.textContent=previewGrove?'← 退出试玩':'← 镜库城';}
 function changeWeather(weather:Weather,announce=true):void {
   campaign.data.weather=weather;view.weather=weather;
   $('weather-clear').setAttribute('aria-pressed',String(weather==='clear'));
@@ -123,27 +133,28 @@ function changeWeather(weather:Weather,announce=true):void {
 }
 function enterForge():void {
   if(campaign.data.chapter!=='complete'){toast('先完成指针港的返航，城际列车就会开放。');return;}
-  closeModal();thread.hide();snow.hide();dune.hide();motor.bounds={...DOCK_BOUNDS};dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);
+  closeModal();thread.hide();snow.hide();dune.hide();grove.hide();motor.bounds={...DOCK_BOUNDS};dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);
   forge.enter();changeWeather(campaign.data.weather,false);
 }
 function enterThread():void {
   if(campaign.data.forge.phase!=='complete'&&!campaign.data.forgeClearance){toast('先乘进位升降台完成脉冲炉，千线程的城际线路就会开放。');return;}
-  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);
+  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);
   thread.enter();changeWeather(campaign.data.weather,false);
 }
 function returnDock():void {
-  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();view.switchCity('dock');campaign.data.city='dock';audio.city='dock';motor.bounds={...DOCK_BOUNDS};
+  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();view.switchCity('dock');campaign.data.city='dock';audio.city='dock';motor.bounds={...DOCK_BOUNDS};
   motor.obstacles=world.obstacles;syncWorld();motor.warp(CHECKPOINTS.complete);setMode('play');view.mode='follow';
   changeWeather(campaign.data.weather,false);persist();updateHud();toast('城际列车已抵达指针港。五城的修复记录都已保留。',5);
 }
 function enterSnow():void {
   if(campaign.data.thread.phase!=='complete'&&!campaign.data.threadClearance){toast('先完成千线程的双线疏散，雪原线路就会开放。');return;}
-  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);snow.enter();
+  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);snow.enter();
 }
 function enterDune():void {
   if(campaign.data.snow.phase!=='complete'&&!campaign.data.snowClearance){toast('先完成白噪雪原的三站风暴投递，沙舟线路才会开放。');return;}
-  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);dune.enter();
+  closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);dune.enter();
 }
+function enterGrove():void {if(!previewGrove&&campaign.data.dune.phase!=='complete'&&!campaign.data.duneClearance){toast('先完成镜库城的 r43 正式切换，潮汐船才会开放。');return;}if(!previewGrove&&campaign.data.dune.phase==='complete'&&!campaign.data.duneClearance)campaign.data.duneClearance=structuredClone(campaign.data.dune);campaign.data.finalePending=false;closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();dialogueIndex=-1;show('subtitle',false);show('scan-banner',false);world.showDraft(null);grove.enter();}
 function toast(message:string,duration=3.6):void{setText('toast',message);show('toast',true);toastUntil=now+duration;}
 function goal():{pos:V3;label:string;code:string;title:string;description:string} {
   const c=campaign.data.chapter;
@@ -154,6 +165,7 @@ function goal():{pos:V3;label:string;code:string;title:string;description:string
   return {pos:STATION_POS.END,label:'END / 城际列车',code:'CHAPTER 01 / RESTORED',title:'下一站，脉冲炉',description:'指针港已经恢复。前往 END 站按 E，或点击下方按钮乘城际列车。'};
 }
 function updateHud():void {
+  if(grove.active){grove.updateHud();return;}
   if(dune.active){dune.updateHud();return;}
   if(snow.active){snow.updateHud();return;}
   if(thread.active){thread.updateHud();return;}
@@ -186,6 +198,7 @@ function nearInteraction():{kind:string;label:string}|null {
   return null;
 }
 function interact():void {
+  if(grove.active){if(!modalType)grove.interact();return;}
   if(dune.active){if(!modalType)dune.interact();return;}
   if(snow.active){if(!modalType)snow.interact();return;}
   if(thread.active){if(!modalType)thread.interact();return;}
@@ -212,6 +225,7 @@ function advanceDialogue(increment=true):void {
   input.clear();show('subtitle',true);setText('speaker','MIRA / 指针港站长');setText('subtitle-text',dialogue[dialogueIndex]);
 }
 function scan():void {
+  if(grove.active){if(!modalType)grove.scan();return;}
   if(dune.active){if(!modalType)dune.scan();return;}
   if(snow.active){if(!modalType)snow.scan();return;}
   if(thread.active){if(!modalType)thread.scan();return;}
@@ -336,6 +350,7 @@ function showResult():void {
   $('result-stats').innerHTML=`<div class="result-stat"><b>${clock(campaign.data.elapsed)}</b><small>修复用时</small></div><div class="result-stat"><b>${campaign.data.attempts.toString().padStart(2,'0')}</b><small>补丁实验</small></div><div class="result-stat"><b>04 / 04</b><small>恢复可达的车站</small></div>`;
 }
 function hint():void {
+  if(grove.active){grove.hint();return;}
   if(dune.active){dune.hint();return;}
   if(snow.active){snow.hint();return;}
   if(thread.active){thread.hint();return;}
@@ -362,10 +377,12 @@ function openModal(type:string):void {
     const threadOpen=campaign.data.forge.phase==='complete'||campaign.data.forgeClearance!==null;
     const snowOpen=campaign.data.thread.phase==='complete'||campaign.data.threadClearance!==null;
     const duneOpen=campaign.data.snow.phase==='complete'||campaign.data.snowClearance!==null;
-    const title=dune.active?'镜库城 · 赤砂档案海':snow.active?'雨线城 · 白噪雪原':thread.active?'千线程 · 双线生命线':forge.active?'脉冲炉 · 散热与进位':'指针港 · 因果地图';
-    const route=dune.active?'市集库存 → 幂等账单 → 一致视图 → WAL恢复 → 在线迁移 → 事务Outbox → 跨城回归 → 灰度回滚 → 地下档案井切换。四份遗留故障可回访。':snow.active?'驯风天线 → 中继路由 → 雪地邮局 → 拥塞风墙 → 四塔时钟 → 暴风协议 → 三次亲自投递。勘测册还有三段支线故事。':thread.active?'交叉桥 → 居民电车站 → 并发售票台 → 内存走廊 → 全城综合回归。完成双线疏散后可乘车前往白噪雪原。':forge.active?'入城港道 → 集电台 → 散热桥 → 两段坡道 → 八位塔 → 进位升降台。':'下层港道 → 中层高架 → 列车返航。到 END 站可搭乘城际列车。';
-    content.innerHTML=`<div class="eyebrow">CIVITAS / 05 OF 08 CITIES OPEN</div><h2 id="modal-title">${title}</h2><div id="large-map"></div><p>${route}</p><p>当前开放5座城市，其余3座为后续规划。已证明的通行资格会保留，重玩第二、第三或第四城仍能续玩后续城市。</p><div class="city-stops"><button id="map-dock">01 指针港 / ${view.city==='dock'?'当前城市':'乘车返回'}</button><button id="map-forge" ${campaign.data.chapter==='complete'?'':'disabled'}>02 脉冲炉 / ${forge.active?'当前城市':campaign.data.chapter==='complete'?'乘车前往':'首城返航后开放'}</button><button id="map-thread" ${threadOpen?'':'disabled'}>03 千线程 / ${thread.active?'打开任务册':threadOpen?'乘车前往':'脉冲炉通关后开放'}</button><button id="map-snow" ${snowOpen?'':'disabled'}>04 雨线城 · 白噪雪原 / ${snow.active?'打开勘测册':snowOpen?'乘车前往':'千线程双线疏散后开放'}</button><button id="map-dune" ${duneOpen?'':'disabled'}>05 镜库城 · 赤砂档案海 / ${dune.active?'打开故障簿':duneOpen?'乘车前往':'白噪雪原投递后开放'}</button>${['06 语法穹顶','07 最短夜','08 权限塔'].map(name=>`<span>${name} / 规划中</span>`).join('')}</div>`;
-    if(dune.active)$('large-map').innerHTML='<div class="forge-map-art"><b>SQL / CAS<br>库存与账单</b><i></i><b>WAL / LSN<br>提交与恢复</b><i></i><b>OUTBOX<br>可靠通知</b><i></i><b>r42 → r43<br>灰度与回滚</b></div>';
+    const groveOpen=campaign.data.dune.phase==='complete'||campaign.data.duneClearance!==null;
+    const title=grove.active?'语法穹顶 · 潮汐红树林':dune.active?'镜库城 · 赤砂档案海':snow.active?'雨线城 · 白噪雪原':thread.active?'千线程 · 双线生命线':forge.active?'脉冲炉 · 散热与进位':'指针港 · 因果地图';
+    const route=grove.active?'雪原发出的信，经镜库守护，终于在红树林交到阿澜手里。':dune.active?'市集库存 → 幂等账单 → 一致视图 → WAL恢复 → 在线迁移 → 事务Outbox → 跨城回归 → 灰度回滚 → 地下档案井切换。四份遗留故障可回访。':snow.active?'驯风天线 → 中继路由 → 雪地邮局 → 拥塞风墙 → 四塔时钟 → 暴风协议 → 三次亲自投递。勘测册还有三段支线故事。':thread.active?'交叉桥 → 居民电车站 → 并发售票台 → 内存走廊 → 全城综合回归。完成双线疏散后可乘车前往白噪雪原。':forge.active?'入城港道 → 集电台 → 散热桥 → 两段坡道 → 八位塔 → 进位升降台。':'下层港道 → 中层高架 → 列车返航。到 END 站可搭乘城际列车。';
+    content.innerHTML=`<div class="eyebrow">CIVITAS / 06 OF 06 CITIES</div><h2 id="modal-title">${title}</h2><div id="large-map"></div><p>${route}</p><p>六城故事在语法穹顶迎来结局。已证明的通行资格会保留。</p><div class="city-stops"><button id="map-dock">01 指针港 / ${view.city==='dock'?'当前城市':'乘车返回'}</button><button id="map-forge" ${campaign.data.chapter==='complete'?'':'disabled'}>02 脉冲炉 / ${forge.active?'当前城市':campaign.data.chapter==='complete'?'乘车前往':'首城返航后开放'}</button><button id="map-thread" ${threadOpen?'':'disabled'}>03 千线程 / ${thread.active?'打开任务册':threadOpen?'乘车前往':'脉冲炉通关后开放'}</button><button id="map-snow" ${snowOpen?'':'disabled'}>04 雨线城 · 白噪雪原 / ${snow.active?'打开勘测册':snowOpen?'乘车前往':'千线程双线疏散后开放'}</button><button id="map-dune" ${duneOpen?'':'disabled'}>05 镜库城 · 赤砂档案海 / ${dune.active?'打开故障簿':duneOpen?'乘车前往':'白噪雪原投递后开放'}</button><button id="map-grove" ${groveOpen?'':'disabled'}>06 语法穹顶 · 潮汐红树林 / ${grove.active?'观看结局':groveOpen?'观看终章':'镜库城 r43 切换后开放'}</button></div>`;
+    if(grove.active)$('large-map').innerHTML='<div class="forge-map-art"><b>04 / 雪原<br>求救信</b><i></i><b>05 / 镜库<br>r43 守护</b><i></i><b>旧水道<br>换乘渡船</b><i></i><b>06 / 红树林<br>亲手交接</b></div>';
+    else if(dune.active)$('large-map').innerHTML='<div class="forge-map-art"><b>SQL / CAS<br>库存与账单</b><i></i><b>WAL / LSN<br>提交与恢复</b><i></i><b>OUTBOX<br>可靠通知</b><i></i><b>r42 → r43<br>灰度与回滚</b></div>';
     else if(snow.active)$('large-map').innerHTML='<div class="forge-map-art"><b>⌁ / ICE<br>风雪天线</b><i></i><b>A → D<br>可靠通信</b><i></i><b>λ / 6<br>因果顺序</b><i></i><b>3 POST<br>风暴投递</b></div>';
     else if(thread.active)$('large-map').innerHTML='<div class="forge-map-art"><b>A → B<br>共同锁序</b><i></i><b>WAIT+<br>优先级老化</b><i></i><b>3 / 3<br>保留每一票</b><i></i><b>LRU<br>热门页框</b></div>';
     else if(forge.active)$('large-map').innerHTML='<div class="forge-map-art"><b>☀ / ☂<br>集电台</b><i></i><b>╱<br>散热桥</b><i></i><b>8 BIT<br>时钟塔</b><i></i><b>↑<br>升降台</b></div>';
@@ -375,6 +392,7 @@ function openModal(type:string):void {
     $('map-thread').onclick=()=>{if(thread.active){closeModal();thread.openJournal();}else enterThread();};
     $('map-snow').onclick=()=>{if(snow.active){closeModal();snow.openJournal();}else enterSnow();};
     $('map-dune').onclick=()=>{if(dune.active){closeModal();dune.openJournal();}else enterDune();};
+    $('map-grove').onclick=()=>{if(grove.active){closeModal();grove.openJournal();}else enterGrove();};
   } else if(type==='coach') {
     content.innerHTML='<div class="eyebrow">HOW TO PLAY / 上手四步</div><h2 id="modal-title">看见错误，再修好城市。</h2>'+
       '<p class="coach-loop">这座城市按因果运行。你的任务不是打赢它，而是<b>找到哪里先错了，把它改成对的，然后让世界重放一遍</b>。</p>'+
@@ -388,10 +406,10 @@ function openModal(type:string):void {
       '<div class="modal-actions"><button class="primary" id="modal-resume">明白了 <span>→</span></button></div>';
     if(window.innerWidth<=700)content.innerHTML=content.innerHTML.replace('WASD 移动，右键拖动转视角。','左下摇杆移动，右侧空白拖动转视角。').replaceAll('按 Q 扫描','点「溯源」扫描').replace('按 E 打断点','点交互提示').replace('按 R 重放验证','点完整验证');
     writeOnboarded();
-  } else content.innerHTML='<div class="eyebrow">RE:FLOW 404 / 断点之城</div><h2 id="modal-title">一个错误，也有存在的意义。</h2><p>CIVITAS 是一座运行中的城市。路网是数据结构，列车是执行事件，居民的名字是一条不能丢失的记录。<br>当清除署决定删除异常，零号选择先听懂它们。</p><p>当前开放指针港、脉冲炉、千线程、雨线城白噪雪原和镜库城赤砂档案海五城。第五城用赤色沙海与青蓝镜面遗迹呈现六条数据系统主线和四份遗留故障：沙尘暴中用G偏振镜取证、F稳身，最后完成跨城回归、灰度回滚及16米档案井切换。关卡从局部因果逐渐进入并发、网络与生产数据承诺。其余三城仍在规划中。</p><p class="modal-rule">城市、角色与声音由原创程序生成。运行中无需登录，不上传存档，不调用 AI 或第三方服务。存档仅保留在当前浏览器。</p><div class="modal-actions"><button class="primary" id="modal-resume">回到世界 <span>→</span></button><button class="text-button" id="modal-card-link">查看零号设定卡 ↗</button></div>';
+  } else content.innerHTML='<div class="eyebrow">RE:FLOW 404 / 断点之城</div><h2 id="modal-title">一个错误，也有存在的意义。</h2><p>CIVITAS 是一座运行中的城市。路网是数据结构，列车是执行事件，居民的名字是一条不能丢失的记录。<br>当清除署决定删除异常，零号选择先听懂它们。</p><p>当前旅程贯穿六城。前五城通过探索、取证和重放修复因果；镜库城的 r43 切换完成后，档案井会自动开启旧水道，带你抵达潮汐红树林。第六城是一段连续播放的结局，交付从雪原带来的信，并留下远方仍亮着的灯。</p><p class="modal-rule">城市、角色与声音由原创程序生成。运行中无需登录，不上传存档，不调用 AI 或第三方服务。存档仅保留在当前浏览器。</p><div class="modal-actions"><button class="primary" id="modal-resume">回到世界 <span>→</span></button><button class="text-button" id="modal-card-link">查看零号设定卡 ↗</button></div>';
   $('modal-resume')?.addEventListener('click',closeModal);
-  $('modal-checkpoint')?.addEventListener('click',()=>{closeModal();if(dune.active){dune.action('Escape');motor.warp(motor.checkpoint);if(!dune.blocked)view.mode='follow';toast('已回到镜库城最近的安全锚点。');return;}if(snow.active){snow.action('Escape');motor.warp(motor.checkpoint);if(!snow.blocked)view.mode='follow';toast('已回到最近交接的雪原避风点。');return;}if(thread.active){thread.action('Escape');motor.warp(motor.checkpoint);if(!thread.blocked)view.mode='follow';toast('已回到千线程最近的安全检查点。');return;}if(forge.active){forge.action('Escape');motor.warp(motor.checkpoint);if(!forge.blocked)view.mode='follow';toast('已回到脉冲炉最近的安全检查点。');return;}if(mode==='patch')closePatch();if(mode==='cinema'){toast('请先结束当前列车回放。');return;}motor.warp(motor.checkpoint);view.mode='follow';toast('已回到最近的安全检查点。');});
-  $('modal-menu')?.addEventListener('click',()=>{persist();closeModal();forge.hide();thread.hide();snow.hide();dune.hide();view.switchCity('dock');setMode('menu');view.mode='menu';world.showDraft(null);show('subtitle',false);dialogueIndex=-1;});
+  $('modal-checkpoint')?.addEventListener('click',()=>{closeModal();if(grove.active){grove.action('Escape');motor.warp(motor.checkpoint);if(!grove.blocked)view.mode='follow';toast('已回到红树林最近的安全栈道。');return;}if(dune.active){dune.action('Escape');motor.warp(motor.checkpoint);if(!dune.blocked)view.mode='follow';toast('已回到镜库城最近的安全锚点。');return;}if(snow.active){snow.action('Escape');motor.warp(motor.checkpoint);if(!snow.blocked)view.mode='follow';toast('已回到最近交接的雪原避风点。');return;}if(thread.active){thread.action('Escape');motor.warp(motor.checkpoint);if(!thread.blocked)view.mode='follow';toast('已回到千线程最近的安全检查点。');return;}if(forge.active){forge.action('Escape');motor.warp(motor.checkpoint);if(!forge.blocked)view.mode='follow';toast('已回到脉冲炉最近的安全检查点。');return;}if(mode==='patch')closePatch();if(mode==='cinema'){toast('请先结束当前列车回放。');return;}motor.warp(motor.checkpoint);view.mode='follow';toast('已回到最近的安全检查点。');});
+  $('modal-menu')?.addEventListener('click',()=>{persist();closeModal();forge.hide();thread.hide();snow.hide();dune.hide();grove.hide();view.switchCity('dock');setMode('menu');view.mode='menu';world.showDraft(null);show('subtitle',false);dialogueIndex=-1;});
   $('modal-fullscreen')?.addEventListener('click',()=>{if(document.fullscreenElement)void document.exitFullscreen().catch(()=>toast('当前浏览器不支持退出全屏。'));else void document.documentElement.requestFullscreen().catch(()=>toast('当前浏览器不支持全屏。'));});
   $('modal-card-link')?.addEventListener('click',()=>{window.open(new URL('character-card.html',document.baseURI).href,'_blank','noopener');});
   $('setting-sound')?.addEventListener('change',e=>{settings.sound=(e.target as HTMLInputElement).checked;audio.setEnabled(settings.sound);applySettings();});
@@ -413,7 +431,7 @@ function applySettings():void {
   $('btn-sound').setAttribute('aria-label',`声音：${settings.sound?'开':'关'}`);$('btn-sound').setAttribute('aria-pressed',String(settings.sound));
 }
 
-$('btn-start').onclick=()=>{if(readOnboarded())start();else{pendingStart=true;openModal('coach');}};$('btn-continue').onclick=()=>start(true);$('btn-interact').onclick=interact;$('tool-patch').onclick=interact;
+$('btn-start').onclick=()=>{if(readOnboarded())start();else{pendingStart=true;openModal('coach');}};$('btn-continue').onclick=()=>start(true);$('btn-grove-preview').onclick=startGrovePreview;$('btn-interact').onclick=interact;$('tool-patch').onclick=interact;
 $('btn-dialogue').onclick=()=>advanceDialogue();$('tool-trace').onclick=scan;$('touch-scan').onclick=scan;
 $('btn-hint').onclick=hint;$('btn-close-patch').onclick=closePatch;$('btn-preview').onclick=preview;$('btn-verify').onclick=verify;
 $('btn-undo').onclick=()=>{draftRail=structuredClone(campaign.data.rail);draftOrder=[...campaign.data.order];renderEditor();world.showDraft(patchCase==='DS-01'?draftRail:null);renderNodes();show('proof-panel',false);toast('草案已撤销，原始证据保留。');};
@@ -425,7 +443,7 @@ $('btn-settings').onclick=()=>openModal('settings');$('btn-help').onclick=()=>op
 $('btn-how').onclick=()=>openModal('coach');
 $('btn-next-city').onclick=enterForge;$('btn-forge-travel').onclick=enterForge;
 $('weather-clear').onclick=()=>changeWeather('clear');$('weather-rain').onclick=()=>changeWeather('rain');
-  $('btn-map').onclick=$('tool-map').onclick=()=>{if(dune.active)dune.openJournal();else if(snow.active)snow.openJournal();else if(thread.active)thread.openJournal();else openModal('map');};$('btn-pause').onclick=()=>{persist();openModal('pause');};
+  $('btn-map').onclick=$('tool-map').onclick=()=>{if(grove.active)grove.openJournal();else if(dune.active)dune.openJournal();else if(snow.active)snow.openJournal();else if(thread.active)thread.openJournal();else openModal('map');};$('btn-pause').onclick=()=>{persist();openModal('pause');};
 $('brand-button').onclick=()=>openModal(mode==='menu'?'about':'pause');$('btn-close-modal').onclick=closeModal;
 $('btn-sound').onclick=()=>{settings.sound=!settings.sound;audio.setEnabled(settings.sound);applySettings();};
 $('touch-jump').addEventListener('pointerdown',e=>{e.preventDefault();input.touchJump=true;($('touch-jump') as HTMLButtonElement).setPointerCapture(e.pointerId);});
@@ -438,6 +456,7 @@ input.onAction=key=>{
     if(key==='Tab') {const items=Array.from($('modal-card').querySelectorAll<HTMLElement>('button:not([disabled]),input,select'));const index=items.indexOf(document.activeElement as HTMLElement);const delta=input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')?-1:1;items[(index+delta+items.length)%items.length]?.focus();}
     return;
   }
+  if(grove.active&&grove.action(key,input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')))return;
   if(dune.active&&dune.action(key,input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')))return;
   if(snow.active&&snow.action(key,input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')))return;
   if(thread.active&&thread.action(key,input.keys.has('ShiftLeft')||input.keys.has('ShiftRight')))return;
@@ -486,7 +505,8 @@ function frame(timestamp:number):void {
     if(thread.active)thread.tick(dt);
     if(snow.active)snow.tick(dt);
     if(dune.active)dune.tick(dt);
-    if(mode==='play'&&dialogueIndex<0&&!forge.blocked&&!thread.blocked&&!snow.blocked&&!dune.blocked) {
+    if(grove.active)grove.tick(dt);
+    if(mode==='play'&&dialogueIndex<0&&!forge.blocked&&!thread.blocked&&!snow.blocked&&!dune.blocked&&!grove.blocked) {
       accumulator+=dt;let steps=0;
       while(accumulator>=STEP&&steps<5){
         if(snow.active)snow.prepareStep(STEP);
@@ -495,7 +515,7 @@ function frame(timestamp:number):void {
         accumulator-=STEP;steps++;
       }
       if(steps===5)accumulator=0;
-      if(!forge.active&&!thread.active&&!snow.active&&!dune.active)world.hero.group.rotation.y=motor.facing;
+      if(!forge.active&&!thread.active&&!snow.active&&!dune.active&&!grove.active)world.hero.group.rotation.y=motor.facing;
       if(motor.speed>1&&now-lastStep>.4&&motor.grounded){audio.cue('step');lastStep=now;}
       if(view.city==='dock'&&campaign.data.chapter==='rail'&&motor.position.y>12&&distance(motor.position,STATION_POS.A)<12)motor.setCheckpoint(A_CHECKPOINT);
     } else accumulator=0;

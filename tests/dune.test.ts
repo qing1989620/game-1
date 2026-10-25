@@ -70,6 +70,7 @@ describe('five-city migration and replay certificates',()=>{
  it('rejects a fabricated fourth-city complete label without its actual policies',()=>{const c=completeFourCities();c.data.snowClearance={...freshSnow(),phase:'complete',audited:true,delivery:3};expect(parseProgress(c.data)).toBeNull();});
  it('earlier city proofs remain required for a snow certificate',()=>{const c=completeFourCities();c.data.snowClearance=structuredClone(c.data.snow);c.data.chapter='meet';expect(parseProgress(c.data)).toBeNull();});
  it('revalidates all seven systems for an audited fifth-city save',()=>{const c=completeFourCities(),d=completeMain();d.audit(network);d.rehearse({canary:5,monitor:'invariants',rollback:true},network);d.finish(network);c.data.dune=d.data;c.data.city='dune';expect(parseProgress(c.data)?.dune.phase).toBe('complete');c.data.snow.patches['NET-02'].retry=false;expect(parseProgress(c.data)).toBeNull();});
+ it('preserves a pending finale across reload only after the proven r43 cutover',()=>{const c=completeFourCities(),d=completeMain();d.audit(network);d.rehearse({canary:5,monitor:'invariants',rollback:true},network);d.finish(network);c.data.dune=d.data;c.data.city='dune';c.data.finalePending=true;expect(parseProgress(JSON.parse(JSON.stringify(c.data)))?.finalePending).toBe(true);c.data.city='dock';expect(parseProgress(c.data)).toBeNull();});
 });
 
 describe('follow camera avoids the mirror monolith',()=>{
