@@ -34,7 +34,7 @@
     {
       "id": "reach-mira",
       "pass": true,
-      "detail": "z=17.7 interactPrompt=true"
+      "detail": "z=18.0 interactPrompt=true"
     },
     {
       "id": "mira-dialogue",
@@ -69,7 +69,7 @@
     {
       "id": "walk-to-elevated-A",
       "pass": true,
-      "detail": "y=13.00 z=-43.39 chapter=rail bridge=true"
+      "detail": "y=13.00 z=-43.21 chapter=rail bridge=true"
     },
     {
       "id": "scan-DS-01",
@@ -114,7 +114,7 @@
     {
       "id": "map-panel",
       "pass": true,
-      "detail": "modal=\"CIVITAS / 04 OF 08 CITIES OPEN指针港 · 因果地图\" largeMap=true"
+      "detail": "modal=\"CIVITAS / 05 OF 08 CITIES OPEN指针港 · 因果地图\" largeMap=true"
     },
     {
       "id": "sound-enable",

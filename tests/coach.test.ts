@@ -90,6 +90,28 @@ describe('Contextual coach names one next action from live state',()=>{
     });
   });
 
+  describe('archive dunes',()=>{
+    it('arrival points at NOOR',()=>{
+      expect(playCoach({city:'dune',phase:'arrival',evidence:[],completed:[]})!.label).toContain('NOOR');
+    });
+    it('each main incident asks for its own evidence, not the first unscanned one',()=>{
+      // Sequential phases: after DB-01 is repaired the coach must ask for DB-02,
+      // not keep pointing at a case that is already done.
+      expect(playCoach({city:'dune',phase:'stock',evidence:[],completed:[],})!.key).toBe('Q');
+      expect(playCoach({city:'dune',phase:'billing',evidence:['DB-01'],completed:['DB-01']})!.key).toBe('Q');
+      expect(playCoach({city:'dune',phase:'billing',evidence:['DB-01','DB-02'],completed:['DB-01']})!.key).toBe('E');
+    });
+    it('the audit and the canary drill both happen at the duty desk',()=>{
+      expect(playCoach({city:'dune',phase:'audit',evidence:[],completed:[]})!.key).toBe('E');
+      expect(playCoach({city:'dune',phase:'rehearsal',evidence:[],completed:[]})!.hint).toContain('回滚');
+    });
+    it('the descent teaches the brace key',()=>{
+      const step=playCoach({city:'dune',phase:'descent',evidence:[],completed:[]})!;
+      expect(step.key).toBe('F');
+      expect(step.label).toContain('16');
+    });
+  });
+
   it('workbench guidance states the concrete goal for each dock case',()=>{
     expect(patchCoach('Q-01').label).toContain('让旅客离开');
     expect(patchCoach('DS-01').label).toContain('B');
